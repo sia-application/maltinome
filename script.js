@@ -253,16 +253,9 @@ function scheduler() {
 }
 
 // Schedule Note
+// Schedule Note
 function scheduleNote(beatNumber, time) {
     const pattern = patterns[currentPattern];
-
-    // Calculate half beat duration for subdivision
-    let halfBeatDuration;
-    if (currentPattern === 'quarter') {
-        halfBeatDuration = (60.0 / tempo) / 2; // Half a beat
-    } else {
-        halfBeatDuration = (60.0 / tempo / 3) / 2; // Half a triplet note
-    }
 
     // Visual feedback
     setTimeout(() => {
@@ -285,32 +278,39 @@ function scheduleNote(beatNumber, time) {
         return; // Silent beat
     }
 
-    // Determine timing based on offbeat mode
-    let mainClickTime, subdivisionClickTime;
+    // Calculate durations and intervals
+    let beatDuration;
+    if (currentPattern === 'quarter') {
+        beatDuration = 60.0 / tempo;
+    } else {
+        beatDuration = 60.0 / tempo / 3;
+    }
+
+    const mainClickInterval = beatDuration / clickMultiplier;
+    const offbeatClickInterval = beatDuration / offbeatMultiplier;
+    // Offset is half of the main click interval
+    const offbeatOffset = mainClickInterval / 2;
+
+    let mainStartTime, offbeatStartTime;
 
     if (isOffbeat) {
-        // 裏拍モード: オフビート音が先、メインクリックが後
-        subdivisionClickTime = time; // オフビート音がビートの頭で鳴る
-        mainClickTime = time + halfBeatDuration; // メインクリックは半拍後
+        // 裏拍モード: オフビート音から鳴る
+        // Offbeat sounds at the beat start
+        offbeatStartTime = time;
+        // Main sounds delayed by offset
+        mainStartTime = time + offbeatOffset;
     } else {
-        // 表拍モード: メインクリックが先、オフビート音が後
-        mainClickTime = time;
-        subdivisionClickTime = time + halfBeatDuration;
+        // 表拍モード
+        // Main sounds at the beat start
+        mainStartTime = time;
+        // Offbeat sounds delayed by offset
+        offbeatStartTime = time + offbeatOffset;
     }
 
     // Play main clicks based on multiplier
     if (volume > 0) {
-        // Calculate the interval between multiplied clicks
-        let beatDuration;
-        if (currentPattern === 'quarter') {
-            beatDuration = 60.0 / tempo;
-        } else {
-            beatDuration = 60.0 / tempo / 3;
-        }
-        const clickInterval = beatDuration / clickMultiplier;
-
         for (let i = 0; i < clickMultiplier; i++) {
-            const clickTime = mainClickTime + (i * clickInterval);
+            const clickTime = mainStartTime + (i * mainClickInterval);
 
             const osc = audioContext.createOscillator();
             const gainNode = audioContext.createGain();
@@ -340,23 +340,8 @@ function scheduleNote(beatNumber, time) {
 
     // Play subdivision sound (offbeat click) - if volume > 0
     if (offbeatVolume > 0) {
-        // Use the same interval calculation as main click
-        let beatDuration;
-        if (currentPattern === 'quarter') {
-            beatDuration = 60.0 / tempo;
-        } else {
-            beatDuration = 60.0 / tempo / 3;
-        }
-        // Calculate interval based on main click multiplier
-        const mainClickInterval = beatDuration / clickMultiplier;
-        // Offbeat interval based on offbeat multiplier
-        const offbeatClickInterval = beatDuration / offbeatMultiplier;
-        // Offset by half of main click interval to always play between main clicks
-        const offbeatOffset = mainClickInterval / 2;
-
         for (let i = 0; i < offbeatMultiplier; i++) {
-            // Start from mainClickTime (not subdivisionClickTime) and add offset
-            const clickTime = mainClickTime + (i * offbeatClickInterval) + offbeatOffset;
+            const clickTime = offbeatStartTime + (i * offbeatClickInterval);
 
             const subOsc = audioContext.createOscillator();
             const subGain = audioContext.createGain();
