@@ -12,6 +12,7 @@ let audioUnlocked = false;
 function unlockAudio() {
     if (audioUnlocked) return;
 
+    // 1. Resume Web Audio Context
     if (!audioContext) {
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
     }
@@ -22,12 +23,21 @@ function unlockAudio() {
         });
     }
 
-    // Play a silent buffer to fully unlock
+    // 2. Play a silent buffer to fully unlock Web Audio
     const buffer = audioContext.createBuffer(1, 1, 22050);
     const source = audioContext.createBufferSource();
     source.buffer = buffer;
     source.connect(audioContext.destination);
     source.start(0);
+
+    // 3. Play a silent HTML5 Audio element to force iOS Audio Session to "Playback"
+    // This allows sound even when the hardware mute switch is on.
+    const silentAudio = new Audio("data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAGZGF0YQQAAAAAAA==");
+    silentAudio.play().then(() => {
+        console.log('Silent HTML5 audio played, forcing Playback session');
+    }).catch(e => {
+        console.warn('Silent HTML5 audio play failed', e);
+    });
 
     audioUnlocked = true;
 
