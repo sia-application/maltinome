@@ -6,6 +6,39 @@ let schedulerTimer = null;
 let nextNoteTime = 0;
 let scheduleAheadTime = 0.1;
 let lookahead = 25;
+let audioUnlocked = false;
+
+// Unlock AudioContext for iOS
+function unlockAudio() {
+    if (audioUnlocked) return;
+
+    if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    }
+
+    if (audioContext.state === 'suspended') {
+        audioContext.resume().then(() => {
+            console.log('AudioContext resumed successfully');
+        });
+    }
+
+    // Play a silent buffer to fully unlock
+    const buffer = audioContext.createBuffer(1, 1, 22050);
+    const source = audioContext.createBufferSource();
+    source.buffer = buffer;
+    source.connect(audioContext.destination);
+    source.start(0);
+
+    audioUnlocked = true;
+
+    // Remove listeners once unlocked
+    document.removeEventListener('touchstart', unlockAudio);
+    document.removeEventListener('click', unlockAudio);
+}
+
+// Add unlock listeners
+document.addEventListener('touchstart', unlockAudio, { passive: false });
+document.addEventListener('click', unlockAudio);
 
 // DOM Elements
 const playBtn = document.getElementById('play-btn');
