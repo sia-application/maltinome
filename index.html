@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>メトロノーム</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎵 メトロノーム</h1>
+        </header>
+
+        <main>
+            <!-- Tempo Display -->
+            <div class="tempo-display">
+                <span id="tempo-value">120</span>
+                <span class="tempo-label">BPM</span>
+            </div>
+
+            <!-- Tempo Slider -->
+            <div class="tempo-control">
+                <button class="tempo-btn" id="tempo-down">−</button>
+                <input type="range" id="tempo-slider" min="40" max="240" value="120">
+                <button class="tempo-btn" id="tempo-up">+</button>
+            </div>
+
+            <!-- Rhythm Pattern Selection -->
+            <div class="rhythm-section">
+                <h2>リズムパターン</h2>
+                <div class="rhythm-buttons">
+                    <button class="rhythm-btn active" data-pattern="quarter">
+                        <div class="rhythm-visual">
+                            <span class="beat">●</span>
+                            <span class="beat">●</span>
+                            <span class="beat">●</span>
+                            <span class="beat">●</span>
+                        </div>
+                        <span class="rhythm-name">4/4拍子</span>
+                    </button>
+                    <button class="rhythm-btn" data-pattern="triplet">
+                        <div class="rhythm-visual triplet-visual">
+                            <span class="beat">●</span>
+                            <span class="beat">●</span>
+                            <span class="beat">●</span>
+                        </div>
+                        <span class="rhythm-name">三連符</span>
+                    </button>
+                    <button class="rhythm-btn" data-pattern="triplet-hollow">
+                        <div class="rhythm-visual triplet-visual">
+                            <span class="beat">●</span>
+                            <span class="beat hollow">○</span>
+                            <span class="beat">●</span>
+                        </div>
+                        <span class="rhythm-name">三連符(中抜き)</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Beat Indicator -->
+            <div class="beat-indicator">
+                <div class="beat-dots" id="beat-dots">
+                    <span class="dot"></span>
+                    <span class="dot"></span>
+                    <span class="dot"></span>
+                    <span class="dot"></span>
+                </div>
+            </div>
+
+            <!-- Play/Stop Button -->
+            <button class="play-btn" id="play-btn">
+                <span class="play-icon">▶</span>
+                <span class="btn-text">スタート</span>
+            </button>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
