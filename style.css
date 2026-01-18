@@ -936,12 +936,15 @@ header h1 {
     }
 
     .rhythm-buttons {
-        flex-direction: column;
+        grid-template-columns: 1fr;
+        /* Stack vertically */
     }
 
     .rhythm-btn {
         flex-direction: row;
-        justify-content: center;
+        /* Horizontal layout inside button */
+        justify-content: space-between;
+        padding: 12px 20px;
     }
 }
 
@@ -1029,6 +1032,7 @@ header h1 {
     background: var(--accent);
     color: white;
 }
+
 /* Footer */
 .app-footer {
     text-align: center;

@@ -9,6 +9,17 @@
     <title>MALTINOME</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon.png">
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('Service Worker registered', reg))
+                    .catch(err => console.error('Service Worker creation failed', err));
+            });
+        }
+    </script>
 </head>
 
 <body>
@@ -27,7 +38,7 @@
                 <span class="play-icon">▶</span>
                 <span class="btn-text">スタート</span>
             </button>
-            <footer class="app-footer">made for SiA v1.0.4</footer>
+            <footer class="app-footer">made for SiA v1.0.5</footer>
         </main>
     </div>
 
@@ -110,7 +121,7 @@
                 <div class="volume-section">
                     <h2>音量調整</h2>
                     <div class="volume-label">
-                        <span>🔊 表拍</span>
+                        <span> 表拍</span>
                         <span class="volume-display">100%</span>
                     </div>
                     <div class="volume-control">
@@ -123,7 +134,7 @@
                 <!-- Offbeat Volume Control -->
                 <div class="volume-section offbeat-volume">
                     <div class="volume-label">
-                        <span>🔊 裏拍</span>
+                        <span> 裏拍</span>
                         <span class="offbeat-volume-display">0%</span>
                     </div>
                     <div class="volume-control">
@@ -137,7 +148,7 @@
                 <div class="volume-section pitch-section">
                     <h2>ピッチ調整</h2>
                     <div class="volume-label">
-                        <span>🎹 ピッチ(Hz)</span>
+                        <span> ピッチ(Hz)</span>
                         <span class="pitch-display">800Hz</span>
                     </div>
                     <div class="volume-control">
@@ -150,7 +161,7 @@
                 <!-- Click Multiplier Selection -->
                 <div class="multiplier-section">
                     <h2>クリック倍数</h2>
-                    <span>⚪️表拍</span>
+                    <span> 表拍</span>
                     <div class="multiplier-buttons">
                         <button class="multiplier-btn active" data-multiplier="1">x1</button>
                         <button class="multiplier-btn" data-multiplier="2">x2</button>
@@ -161,7 +172,7 @@
 
                 <!-- Offbeat Multiplier Selection -->
                 <div class="multiplier-section">
-                    <span>⚫️裏拍</span>
+                    <span> 裏拍</span>
                     <div class="multiplier-buttons">
                         <button class="offbeat-mult-btn active" data-multiplier="1">x1</button>
                         <button class="offbeat-mult-btn" data-multiplier="2">x2</button>
@@ -185,7 +196,7 @@
                 <!-- Accent Toggle -->
                 <div class="accent-section">
                     <button class="accent-toggle active">
-                        <span class="accent-icon">🥁</span>
+                        <span class="accent-icon"></span>
                         <span class="accent-label">1拍目にアクセント</span>
                         <div class="accent-switch">
                             <div class="accent-slider"></div>
