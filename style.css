@@ -151,6 +151,15 @@ header h1 {
     margin-bottom: 24px;
 }
 
+.volume-section h2 {
+    text-align: center;
+    font-size: 1rem;
+    color: var(--text-secondary);
+    margin-bottom: 16px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
 .volume-label {
     display: flex;
     justify-content: space-between;
@@ -223,47 +232,7 @@ header h1 {
     transform: scale(0.95);
 }
 
-/* Offbeat Multiplier Buttons */
-.offbeat-multiplier {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    margin-top: 10px;
-}
 
-.offbeat-mult-label {
-    font-size: 0.8rem;
-    color: var(--text-secondary);
-}
-
-.offbeat-multiplier-buttons {
-    display: flex;
-    gap: 6px;
-}
-
-.offbeat-mult-btn {
-    padding: 4px 10px;
-    border-radius: 12px;
-    border: 1px solid var(--bg-glass);
-    background: var(--bg-glass);
-    color: var(--text-secondary);
-    font-size: 0.75rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.offbeat-mult-btn:hover {
-    border-color: #f39c12;
-    background: rgba(243, 156, 18, 0.1);
-}
-
-.offbeat-mult-btn.active {
-    border-color: #f39c12;
-    background: rgba(243, 156, 18, 0.2);
-    color: #f39c12;
-}
 
 #volume-slider {
     flex: 1;
@@ -341,12 +310,14 @@ header h1 {
 }
 
 .rhythm-buttons {
-    display: flex;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     gap: 12px;
 }
 
 .rhythm-btn {
-    flex: 1;
+    /* flex: 1; removed as grid handles width */
+    width: 100%;
     padding: 16px 8px;
     border: 2px solid var(--bg-glass);
     border-radius: 16px;
@@ -377,12 +348,46 @@ header h1 {
     font-size: 0.9rem;
 }
 
+.rhythm-visual {
+    display: flex;
+    gap: 6px;
+    font-size: 0.9rem;
+}
+
+.quarter-visual {
+    position: relative;
+}
+
 .triplet-visual {
     position: relative;
 }
 
+.sextuplet-visual {
+    position: relative;
+}
+
+.quarter-visual::before {
+    content: '4';
+    position: absolute;
+    top: -14px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.7rem;
+    color: var(--accent);
+}
+
 .triplet-visual::before {
     content: '3';
+    position: absolute;
+    top: -14px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.7rem;
+    color: var(--accent);
+}
+
+.sextuplet-visual::before {
+    content: '6';
     position: absolute;
     top: -14px;
     left: 50%;
@@ -410,6 +415,14 @@ header h1 {
     margin-bottom: 24px;
 }
 
+.multiplier-section>span {
+    display: block;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+    padding: 0 8px;
+}
+
 .multiplier-section h2 {
     text-align: center;
     font-size: 1rem;
@@ -425,7 +438,8 @@ header h1 {
     gap: 12px;
 }
 
-.multiplier-btn {
+.multiplier-btn,
+.offbeat-mult-btn {
     padding: 10px 20px;
     border-radius: 25px;
     border: 2px solid var(--bg-glass);
@@ -437,7 +451,8 @@ header h1 {
     transition: all 0.3s ease;
 }
 
-.multiplier-btn:hover {
+.multiplier-btn:hover,
+.offbeat-mult-btn:hover {
     border-color: var(--secondary);
     background: rgba(162, 155, 254, 0.1);
 }
@@ -449,11 +464,29 @@ header h1 {
     box-shadow: 0 0 15px rgba(0, 210, 211, 0.3);
 }
 
+.offbeat-mult-btn.active {
+    border-color: #f39c12;
+    background: rgba(243, 156, 18, 0.2);
+    color: #f39c12;
+    box-shadow: 0 0 15px rgba(243, 156, 18, 0.3);
+}
+
 /* Offbeat Toggle */
 .offbeat-section {
     margin-bottom: 24px;
     display: flex;
-    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+}
+
+.offbeat-section h2 {
+    text-align: center;
+    font-size: 1rem;
+    color: var(--text-secondary);
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
 .offbeat-toggle {

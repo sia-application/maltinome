@@ -12,7 +12,7 @@ let subdivisionSound = false;
 let offbeatMuted = false;
 let mainMuted = false;
 let volume = 1.0;
-let offbeatVolume = 0.1;
+let offbeatVolume = 0.0;
 let schedulerTimer = null;
 let nextNoteTime = 0;
 let scheduleAheadTime = 0.1;
@@ -55,6 +55,11 @@ const patterns = {
         beats: 3,
         subdivisions: 1,
         notes: [1, 0, 1] // First and third sound, middle is silent
+    },
+    'sextuplet': {
+        beats: 6,
+        subdivisions: 1,
+        notes: [1, 1, 1, 1, 1, 1]
     }
 };
 
@@ -291,6 +296,8 @@ function scheduleNote(beatNumber, time) {
     let beatDuration;
     if (currentPattern === 'quarter') {
         beatDuration = 60.0 / tempo;
+    } else if (currentPattern === 'sextuplet') {
+        beatDuration = 60.0 / tempo / 6;
     } else {
         beatDuration = 60.0 / tempo / 3;
     }
@@ -381,6 +388,8 @@ function nextNote() {
     if (currentPattern === 'quarter') {
         // Quarter notes: seconds per beat
         noteDuration = 60.0 / tempo;
+    } else if (currentPattern === 'sextuplet') {
+        noteDuration = 60.0 / tempo / 6;
     } else {
         // Triplets: 3 notes per beat, so each note is 1/3 of a beat
         noteDuration = 60.0 / tempo / 3;

@@ -14,7 +14,7 @@
 <body>
     <div class="container">
         <header>
-            <h1>🎵 メトロノーム</h1>
+            <h1>MALTINOME</h1>
         </header>
 
         <main>
@@ -31,48 +31,21 @@
                 <button class="tempo-btn" id="tempo-up">+</button>
             </div>
 
-            <!-- Volume Control -->
-            <div class="volume-section">
-                <div class="volume-label">
-                    <span>🔊 表拍音量</span>
-                    <span id="volume-display">100%</span>
-                </div>
-                <div class="volume-control">
-                    <button class="mute-btn" id="main-mute-btn" title="ミュート">🔈</button>
-                    <input type="range" id="volume-slider" min="0" max="500" value="100">
-                    <button class="volume-up-btn" id="main-volume-up" title="+100%">🔊</button>
+            <!-- Beat Indicator -->
+            <div class="beat-indicator">
+                <div class="beat-dots" id="beat-dots">
+                    <span class="dot"></span>
+                    <span class="dot"></span>
+                    <span class="dot"></span>
+                    <span class="dot"></span>
                 </div>
             </div>
-
-            <!-- Offbeat Volume Control -->
-            <div class="volume-section offbeat-volume">
-                <div class="volume-label">
-                    <span>♪ 裏拍音量</span>
-                    <span id="offbeat-volume-display">10%</span>
-                </div>
-                <div class="volume-control">
-                    <button class="mute-btn" id="offbeat-mute-btn" title="ミュート">🔈</button>
-                    <input type="range" id="offbeat-volume-slider" min="0" max="500" value="10">
-                    <button class="volume-up-btn" id="offbeat-volume-up" title="+10%">🔊</button>
-                </div>
-                <!-- Offbeat Multiplier -->
-                <div class="offbeat-multiplier">
-                    <span class="offbeat-mult-label">クリック倍数(裏拍):</span>
-                    <div class="offbeat-multiplier-buttons">
-                        <button class="offbeat-mult-btn active" data-multiplier="1">x1</button>
-                        <button class="offbeat-mult-btn" data-multiplier="2">x2</button>
-                        <button class="offbeat-mult-btn" data-multiplier="3">x3</button>
-                        <button class="offbeat-mult-btn" data-multiplier="4">x4</button>
-                    </div>
-                </div>
-            </div>
-
             <!-- Rhythm Pattern Selection -->
             <div class="rhythm-section">
                 <h2>リズムパターン</h2>
                 <div class="rhythm-buttons">
                     <button class="rhythm-btn active" data-pattern="quarter">
-                        <div class="rhythm-visual">
+                        <div class="rhythm-visual quarter-visual">
                             <span class="beat">●</span>
                             <span class="beat">●</span>
                             <span class="beat">●</span>
@@ -86,7 +59,7 @@
                             <span class="beat">●</span>
                             <span class="beat">●</span>
                         </div>
-                        <span class="rhythm-name">三連符</span>
+                        <span class="rhythm-name">3連符</span>
                     </button>
                     <button class="rhythm-btn" data-pattern="triplet-hollow">
                         <div class="rhythm-visual triplet-visual">
@@ -94,14 +67,55 @@
                             <span class="beat hollow">○</span>
                             <span class="beat">●</span>
                         </div>
-                        <span class="rhythm-name">三連符(中抜き)</span>
+                        <span class="rhythm-name">3連符(中抜き)</span>
+                    </button>
+                    <button class="rhythm-btn" data-pattern="sextuplet">
+                        <div class="rhythm-visual sextuplet-visual">
+                            <span class="beat">●</span>
+                            <span class="beat">●</span>
+                            <span class="beat">●</span>
+                            <span class="beat">●</span>
+                            <span class="beat">●</span>
+                            <span class="beat">●</span>
+                        </div>
+                        <span class="rhythm-name">6連符</span>
                     </button>
                 </div>
             </div>
+            <!-- Volume Control -->
+            <div class="volume-section">
+                <h2>音量調整</h2>
+                <div class="volume-label">
+                    <span>🔊 表拍</span>
+                    <span id="volume-display">100%</span>
+                </div>
+                <div class="volume-control">
+                    <button class="mute-btn" id="main-mute-btn" title="ミュート">🔈</button>
+                    <input type="range" id="volume-slider" min="0" max="500" value="100">
+                    <button class="volume-up-btn" id="main-volume-up" title="+100%">🔊</button>
+                </div>
+            </div>
+
+            <!-- Offbeat Volume Control -->
+            <div class="volume-section offbeat-volume">
+                <div class="volume-label">
+                    <span>🔊 裏拍</span>
+                    <span id="offbeat-volume-display">0%</span>
+                </div>
+                <div class="volume-control">
+                    <button class="mute-btn muted" id="offbeat-mute-btn" title="ミュート">🔇</button>
+                    <input type="range" id="offbeat-volume-slider" min="0" max="500" value="0">
+                    <button class="volume-up-btn" id="offbeat-volume-up" title="+10%">🔊</button>
+                </div>
+
+            </div>
+
+
 
             <!-- Click Multiplier Selection -->
             <div class="multiplier-section">
-                <h2>クリック倍数(表拍)</h2>
+                <h2>クリック倍数</h2>
+                <span>⚪️表拍</span>
                 <div class="multiplier-buttons">
                     <button class="multiplier-btn active" data-multiplier="1">x1</button>
                     <button class="multiplier-btn" data-multiplier="2">x2</button>
@@ -110,14 +124,26 @@
                 </div>
             </div>
 
+            <!-- Offbeat Multiplier Selection -->
+            <div class="multiplier-section">
+                <span>⚫️裏拍</span>
+                <div class="multiplier-buttons">
+                    <button class="offbeat-mult-btn active" data-multiplier="1">x1</button>
+                    <button class="offbeat-mult-btn" data-multiplier="2">x2</button>
+                    <button class="offbeat-mult-btn" data-multiplier="3">x3</button>
+                    <button class="offbeat-mult-btn" data-multiplier="4">x4</button>
+                </div>
+            </div>
+
             <!-- Offbeat Toggle -->
             <div class="offbeat-section">
+                <h2>その他の設定</h2>
                 <button class="offbeat-toggle" id="offbeat-toggle">
-                    <span class="toggle-label">表拍</span>
+                    <span class="toggle-label">表拍開始</span>
                     <div class="toggle-switch">
                         <div class="toggle-slider"></div>
                     </div>
-                    <span class="toggle-label">裏拍</span>
+                    <span class="toggle-label">裏拍開始</span>
                 </button>
             </div>
 
@@ -125,22 +151,14 @@
             <div class="accent-section">
                 <button class="accent-toggle active" id="accent-toggle">
                     <span class="accent-icon">🥁</span>
-                    <span class="accent-label">1拍目アクセント</span>
+                    <span class="accent-label">1拍目にアクセント</span>
                     <div class="accent-switch">
                         <div class="accent-slider"></div>
                     </div>
                 </button>
             </div>
 
-            <!-- Beat Indicator -->
-            <div class="beat-indicator">
-                <div class="beat-dots" id="beat-dots">
-                    <span class="dot"></span>
-                    <span class="dot"></span>
-                    <span class="dot"></span>
-                    <span class="dot"></span>
-                </div>
-            </div>
+
 
             <!-- Play/Stop Button -->
             <button class="play-btn" id="play-btn">
