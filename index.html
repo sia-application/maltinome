@@ -31,6 +31,32 @@
                 <button class="tempo-btn" id="tempo-up">+</button>
             </div>
 
+            <!-- Volume Control -->
+            <div class="volume-section">
+                <div class="volume-label">
+                    <span>🔊 メイン音量</span>
+                    <span id="volume-display">100%</span>
+                </div>
+                <div class="volume-control">
+                    <span class="volume-icon">🔈</span>
+                    <input type="range" id="volume-slider" min="0" max="500" value="100">
+                    <span class="volume-icon">🔊</span>
+                </div>
+            </div>
+
+            <!-- Offbeat Volume Control -->
+            <div class="volume-section offbeat-volume">
+                <div class="volume-label">
+                    <span>♪ オフビート音量</span>
+                    <span id="offbeat-volume-display">100%</span>
+                </div>
+                <div class="volume-control">
+                    <span class="volume-icon">🔈</span>
+                    <input type="range" id="offbeat-volume-slider" min="0" max="500" value="100">
+                    <span class="volume-icon">🔊</span>
+                </div>
+            </div>
+
             <!-- Rhythm Pattern Selection -->
             <div class="rhythm-section">
                 <h2>リズムパターン</h2>
@@ -71,6 +97,17 @@
                         <div class="toggle-slider"></div>
                     </div>
                     <span class="toggle-label">裏拍</span>
+                </button>
+            </div>
+
+            <!-- Subdivision Sound Toggle -->
+            <div class="subdivision-section">
+                <button class="subdivision-toggle" id="subdivision-toggle">
+                    <div class="subdivision-icon">♪</div>
+                    <span class="subdivision-label">オフビート音</span>
+                    <div class="subdivision-switch">
+                        <div class="subdivision-slider"></div>
+                    </div>
                 </button>
             </div>
 

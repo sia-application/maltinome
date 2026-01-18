@@ -135,6 +135,102 @@ header h1 {
     transform: scale(1.2);
 }
 
+/* Volume Section */
+.volume-section {
+    margin-bottom: 24px;
+}
+
+.volume-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    padding: 0 8px;
+}
+
+.volume-label span:first-child {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+#volume-display {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--accent);
+}
+
+.volume-control {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.volume-icon {
+    font-size: 1.2rem;
+    opacity: 0.7;
+}
+
+#volume-slider {
+    flex: 1;
+    height: 8px;
+    -webkit-appearance: none;
+    appearance: none;
+    background: linear-gradient(90deg, var(--secondary), var(--accent));
+    border-radius: 4px;
+    outline: none;
+}
+
+#volume-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), #e84393);
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(253, 121, 168, 0.4);
+    transition: transform 0.2s ease;
+}
+
+#volume-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+}
+
+/* Offbeat Volume Slider */
+.offbeat-volume #offbeat-volume-slider {
+    background: linear-gradient(90deg, #f39c12, #e67e22);
+}
+
+.offbeat-volume #offbeat-volume-display {
+    color: #f39c12;
+}
+
+#offbeat-volume-slider {
+    flex: 1;
+    height: 8px;
+    -webkit-appearance: none;
+    appearance: none;
+    background: linear-gradient(90deg, #f39c12, #e67e22);
+    border-radius: 4px;
+    outline: none;
+}
+
+#offbeat-volume-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #f39c12, #e67e22);
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(243, 156, 18, 0.4);
+    transition: transform 0.2s ease;
+}
+
+#offbeat-volume-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+}
+
 /* Rhythm Section */
 .rhythm-section {
     margin-bottom: 32px;
@@ -285,6 +381,83 @@ header h1 {
     left: 26px;
     background: linear-gradient(135deg, var(--accent), #e84393);
     box-shadow: 0 2px 8px rgba(253, 121, 168, 0.4);
+}
+
+/* Subdivision Sound Toggle */
+.subdivision-section {
+    margin-bottom: 24px;
+    display: flex;
+    justify-content: center;
+}
+
+.subdivision-toggle {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    border: 2px solid var(--bg-glass);
+    border-radius: 50px;
+    background: var(--bg-glass);
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.85rem;
+}
+
+.subdivision-toggle:hover {
+    border-color: var(--secondary);
+    background: rgba(162, 155, 254, 0.1);
+}
+
+.subdivision-toggle.active {
+    border-color: #f39c12;
+    background: rgba(243, 156, 18, 0.15);
+}
+
+.subdivision-icon {
+    font-size: 1.1rem;
+    opacity: 0.5;
+    transition: all 0.3s ease;
+}
+
+.subdivision-toggle.active .subdivision-icon {
+    opacity: 1;
+    color: #f39c12;
+}
+
+.subdivision-label {
+    color: var(--text-secondary);
+    transition: all 0.3s ease;
+}
+
+.subdivision-toggle.active .subdivision-label {
+    color: #f39c12;
+}
+
+.subdivision-switch {
+    width: 36px;
+    height: 20px;
+    background: var(--bg-dark);
+    border-radius: 10px;
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.subdivision-slider {
+    width: 16px;
+    height: 16px;
+    background: var(--text-secondary);
+    border-radius: 50%;
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    transition: all 0.3s ease;
+}
+
+.subdivision-toggle.active .subdivision-slider {
+    left: 18px;
+    background: linear-gradient(135deg, #f39c12, #e67e22);
+    box-shadow: 0 2px 8px rgba(243, 156, 18, 0.4);
 }
 
 /* Beat Indicator */

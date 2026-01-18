@@ -5,6 +5,9 @@ let tempo = 120;
 let currentPattern = 'quarter';
 let currentBeat = 0;
 let isOffbeat = false;
+let subdivisionSound = false;
+let volume = 1.0;
+let offbeatVolume = 1.0;
 let schedulerTimer = null;
 let nextNoteTime = 0;
 let scheduleAheadTime = 0.1;
@@ -19,6 +22,11 @@ const tempoUp = document.getElementById('tempo-up');
 const rhythmBtns = document.querySelectorAll('.rhythm-btn');
 const beatDots = document.getElementById('beat-dots');
 const offbeatToggle = document.getElementById('offbeat-toggle');
+const subdivisionToggle = document.getElementById('subdivision-toggle');
+const volumeSlider = document.getElementById('volume-slider');
+const volumeDisplay = document.getElementById('volume-display');
+const offbeatVolumeSlider = document.getElementById('offbeat-volume-slider');
+const offbeatVolumeDisplay = document.getElementById('offbeat-volume-display');
 
 // Pattern Definitions
 const patterns = {
@@ -81,6 +89,21 @@ function setupEventListeners() {
         isOffbeat = !isOffbeat;
         offbeatToggle.classList.toggle('offbeat', isOffbeat);
     });
+
+    subdivisionToggle.addEventListener('click', () => {
+        subdivisionSound = !subdivisionSound;
+        subdivisionToggle.classList.toggle('active', subdivisionSound);
+    });
+
+    volumeSlider.addEventListener('input', (e) => {
+        volume = parseInt(e.target.value) / 100;
+        volumeDisplay.textContent = e.target.value + '%';
+    });
+
+    offbeatVolumeSlider.addEventListener('input', (e) => {
+        offbeatVolume = parseInt(e.target.value) / 100;
+        offbeatVolumeDisplay.textContent = e.target.value + '%';
+    });
 }
 
 // Update Tempo Display
@@ -120,7 +143,14 @@ function togglePlay() {
 function start() {
     isPlaying = true;
     currentBeat = 0;
-    nextNoteTime = audioContext.currentTime;
+
+    // Resume audio context if suspended (required for some browsers)
+    if (audioContext.state === 'suspended') {
+        audioContext.resume();
+    }
+
+    // Add small delay before first note to prevent audio glitch
+    nextNoteTime = audioContext.currentTime + 0.1;
 
     playBtn.classList.add('playing');
     playBtn.querySelector('.play-icon').textContent = '⏹';
@@ -157,14 +187,12 @@ function scheduler() {
 function scheduleNote(beatNumber, time) {
     const pattern = patterns[currentPattern];
 
-    // Calculate offbeat delay
-    let offbeatDelay = 0;
-    if (isOffbeat) {
-        if (currentPattern === 'quarter') {
-            offbeatDelay = (60.0 / tempo) / 2; // Half a beat
-        } else {
-            offbeatDelay = (60.0 / tempo / 3) / 2; // Half a triplet note
-        }
+    // Calculate half beat duration for subdivision
+    let halfBeatDuration;
+    if (currentPattern === 'quarter') {
+        halfBeatDuration = (60.0 / tempo) / 2; // Half a beat
+    } else {
+        halfBeatDuration = (60.0 / tempo / 3) / 2; // Half a triplet note
     }
 
     // Visual feedback
@@ -188,29 +216,63 @@ function scheduleNote(beatNumber, time) {
         return; // Silent beat
     }
 
-    // Actual sound time (with offbeat delay)
-    const soundTime = time + offbeatDelay;
+    // Determine timing based on offbeat mode
+    let mainClickTime, subdivisionClickTime;
 
-    // Create oscillator for click sound
+    if (isOffbeat) {
+        // 裏拍モード: オフビート音が先、メインクリックが後
+        subdivisionClickTime = time; // オフビート音がビートの頭で鳴る
+        mainClickTime = time + halfBeatDuration; // メインクリックは半拍後
+    } else {
+        // 表拍モード: メインクリックが先、オフビート音が後
+        mainClickTime = time;
+        subdivisionClickTime = time + halfBeatDuration;
+    }
+
+    // Play main click
     const osc = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
 
-    // First beat is higher pitch
+    // Use square wave for louder, punchier sound
+    osc.type = 'square';
+
+    // First beat is higher pitch, all beats same volume
     if (beatNumber === 0) {
         osc.frequency.value = 1000;
-        gainNode.gain.value = 0.5;
     } else {
         osc.frequency.value = 800;
-        gainNode.gain.value = 0.3;
     }
+
+    // Set initial gain with volume control
+    gainNode.gain.setValueAtTime(volume, mainClickTime);
 
     osc.connect(gainNode);
     gainNode.connect(audioContext.destination);
 
-    // Short click sound
-    osc.start(soundTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.001, soundTime + 0.05);
-    osc.stop(soundTime + 0.05);
+    // Longer sound for more presence
+    osc.start(mainClickTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, mainClickTime + 0.1);
+    osc.stop(mainClickTime + 0.1);
+
+    // Play subdivision sound (offbeat click)
+    if (subdivisionSound) {
+        const subOsc = audioContext.createOscillator();
+        const subGain = audioContext.createGain();
+
+        // Use square wave for louder sound
+        subOsc.type = 'square';
+        subOsc.frequency.value = 600;
+
+        // Set initial gain with offbeat volume control
+        subGain.gain.setValueAtTime(offbeatVolume, subdivisionClickTime);
+
+        subOsc.connect(subGain);
+        subGain.connect(audioContext.destination);
+
+        subOsc.start(subdivisionClickTime);
+        subGain.gain.exponentialRampToValueAtTime(0.001, subdivisionClickTime + 0.1);
+        subOsc.stop(subdivisionClickTime + 0.1);
+    }
 }
 
 // Next Note
