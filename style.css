@@ -365,6 +365,62 @@ header h1 {
     transform: scale(1.2);
 }
 
+/* Pitch Control Section */
+.pitch-section .pitch-slider {
+    background: linear-gradient(90deg, #1abc9c, #16a085);
+}
+
+.pitch-section .pitch-display {
+    color: #1abc9c;
+    font-weight: 600;
+}
+
+.pitch-slider {
+    flex: 1;
+    height: 8px;
+    -webkit-appearance: none;
+    appearance: none;
+    background: linear-gradient(90deg, #1abc9c, #16a085);
+    border-radius: 4px;
+    outline: none;
+}
+
+.pitch-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #1abc9c, #16a085);
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(26, 188, 156, 0.4);
+    transition: transform 0.2s ease;
+}
+
+.pitch-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+}
+
+.pitch-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: none;
+    background: var(--bg-glass);
+    color: var(--text-primary);
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.pitch-btn:hover {
+    background: #1abc9c;
+    color: white;
+}
+
 /* Rhythm Section */
 .rhythm-section {
     margin-bottom: 32px;

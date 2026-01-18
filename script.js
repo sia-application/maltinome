@@ -33,6 +33,7 @@ class Metronome {
         this.accentEnabled = true;
         this.volume = 1.0;
         this.offbeatVolume = 0.0;
+        this.pitch = 800; // Default pitch
         this.isPlaying = false; // Individual playing state
 
         this.element = this.createUI();
@@ -147,6 +148,24 @@ class Metronome {
                 this.offbeatMultiplier = parseInt(btn.dataset.multiplier);
             });
         });
+
+        // Pitch Control
+        const pitchSlider = el.querySelector('.pitch-slider');
+        const pitchDisplay = el.querySelector('.pitch-display');
+
+        const updatePitch = (val) => {
+            let v = parseInt(val);
+            v = Math.max(200, Math.min(2000, v));
+            this.pitch = v;
+            pitchSlider.value = v;
+            pitchDisplay.textContent = v + 'Hz';
+        };
+
+        if (pitchSlider) {
+            pitchSlider.addEventListener('input', (e) => updatePitch(e.target.value));
+            el.querySelector('.pitch-down').addEventListener('click', () => updatePitch(this.pitch - 50));
+            el.querySelector('.pitch-up').addEventListener('click', () => updatePitch(this.pitch + 50));
+        }
 
         // Toggles
         const offToggle = el.querySelector('.offbeat-toggle');
@@ -331,7 +350,7 @@ function scheduleMetronomeNote(metronome, time) {
     if (metronome.volume > 0) {
         for (let i = 0; i < metronome.clickMultiplier; i++) {
             playTone(mainStart + i * mainInterval,
-                (beatNumber === 0 && i === 0 && metronome.accentEnabled) ? 1000 : 800,
+                (beatNumber === 0 && i === 0 && metronome.accentEnabled) ? metronome.pitch + 200 : metronome.pitch,
                 metronome.volume, 'square');
         }
     }
