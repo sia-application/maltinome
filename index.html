@@ -27,12 +27,16 @@
                 <span class="play-icon">▶</span>
                 <span class="btn-text">スタート</span>
             </button>
+            <footer class="app-footer">made for SiA v1.0.2</footer>
         </main>
     </div>
 
     <template id="metronome-template">
         <div class="metronome-unit">
-            <button class="remove-btn" title="削除">×</button>
+            <div class="unit-controls">
+                <button class="unit-play-btn" title="再生/停止">▶</button>
+                <button class="remove-btn" title="削除">×</button>
+            </div>
             <!-- Tempo Display -->
             <div class="tempo-display">
                 <input type="number" class="tempo-input" min="5" max="999" value="120">

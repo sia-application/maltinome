@@ -845,9 +845,7 @@ header h1 {
     box-shadow: 0 10px 30px rgba(231, 76, 60, 0.4);
 }
 
-.play-btn.playing .play-icon::before {
-    content: '⏹';
-}
+
 
 .play-icon {
     font-size: 1.4rem;
@@ -934,4 +932,53 @@ header h1 {
         opacity: 1;
         transform: translateY(0);
     }
+}
+
+/* Unit Controls */
+.unit-controls {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.remove-btn {
+    position: static;
+    /* Reset absolute positioning */
+}
+
+.unit-play-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: none;
+    background: var(--bg-glass);
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.unit-play-btn:hover {
+    background: var(--primary);
+    transform: scale(1.1);
+}
+
+.unit-play-btn.playing {
+    background: var(--accent);
+    color: white;
+}
+/* Footer */
+.app-footer {
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    padding: 24px 0 12px;
+    opacity: 0.7;
+    font-family: 'Outfit', sans-serif;
 }

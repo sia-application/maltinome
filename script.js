@@ -33,6 +33,7 @@ class Metronome {
         this.accentEnabled = true;
         this.volume = 1.0;
         this.offbeatVolume = 0.0;
+        this.isPlaying = false; // Individual playing state
 
         this.element = this.createUI();
         this.setupEventListeners();
@@ -56,7 +57,14 @@ class Metronome {
         const el = this.element;
 
         // Removing
-        el.querySelector('.remove-btn').addEventListener('click', () => this.remove());
+        el.querySelector('.remove-btn').addEventListener('click', () => {
+            if (this.isPlaying) this.toggle(); // Stop if playing
+            this.remove();
+        });
+
+        // Individual Play
+        const playBtn = el.querySelector('.unit-play-btn');
+        playBtn.addEventListener('click', () => this.toggle());
 
         // Tempo
         const tempoInput = el.querySelector('.tempo-input');
@@ -200,6 +208,74 @@ class Metronome {
     clearVisuals() {
         this.element.querySelectorAll('.dot').forEach(d => d.classList.remove('active', 'first'));
     }
+
+    toggle() {
+        this.isPlaying = !this.isPlaying;
+        const btn = this.element.querySelector('.unit-play-btn');
+
+        if (this.isPlaying) {
+            btn.classList.add('playing');
+            btn.textContent = '■';
+
+            // If global scheduler isn't running, start it
+            if (!schedulerTimer) {
+                // Ensure audio context is ready
+                if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                if (audioContext.state === 'suspended') audioContext.resume();
+
+                // Sync start time
+                const now = audioContext.currentTime;
+                this.nextNoteTime = now + 0.05;
+                this.currentBeat = 0;
+
+                startSchedulerLoop();
+            } else {
+                // Join existing loop
+                this.nextNoteTime = audioContext.currentTime + 0.05;
+                this.currentBeat = 0;
+            }
+        } else {
+            btn.classList.remove('playing');
+            btn.textContent = '▶';
+            this.clearVisuals();
+
+            // If no metronomes are playing, stop scheduler
+            checkAutoStop();
+        }
+        updateGlobalPlayState();
+    }
+}
+
+
+// Global Scheduler State Management
+function startSchedulerLoop() {
+    if (!schedulerTimer) {
+        scheduler();
+        updateGlobalPlayState();
+    }
+}
+
+function checkAutoStop() {
+    const anyPlaying = metronomes.some(m => m.isPlaying);
+    if (!anyPlaying) {
+        clearTimeout(schedulerTimer);
+        schedulerTimer = null;
+    }
+}
+
+function updateGlobalPlayState() {
+    const anyPlaying = metronomes.some(m => m.isPlaying);
+    isPlaying = anyPlaying; // Sync global flag
+
+    if (isPlaying) {
+        playBtn.classList.add('playing');
+        playBtn.querySelector('.play-icon').textContent = '■';
+        playBtn.querySelector('.btn-text').textContent = 'すべてストップ';
+    } else {
+        playBtn.classList.remove('playing');
+        playBtn.querySelector('.play-icon').textContent = '▶';
+        playBtn.querySelector('.btn-text').textContent = 'すべてスタート';
+    }
 }
 
 
@@ -207,7 +283,10 @@ class Metronome {
 function scheduler() {
 
     // Correct loop implementation inside scheduler function:
+    // Correct loop implementation inside scheduler function:
     metronomes.forEach(m => {
+        if (!m.isPlaying) return; // Skip if not playing
+
         // Initialize nextNoteTime for new metronomes if needed, or track it on the instance
         if (!m.nextNoteTime) m.nextNoteTime = audioContext.currentTime + 0.1;
 
@@ -217,8 +296,11 @@ function scheduler() {
         }
     });
 
-    if (isPlaying) {
+    // Continue loop if anyone is playing
+    if (metronomes.some(m => m.isPlaying)) {
         schedulerTimer = setTimeout(scheduler, lookahead);
+    } else {
+        schedulerTimer = null;
     }
 }
 
@@ -294,29 +376,33 @@ async function togglePlay() {
         await audioContext.resume();
     }
 
-    isPlaying = !isPlaying;
+    // Checking if any are playing
+    const anyPlaying = metronomes.some(m => m.isPlaying);
 
-    if (isPlaying) {
-        // Reset timing for all with a small safe buffer
-        // Adding 0.05s delay allows the audio engine to stabilize
+    if (anyPlaying) {
+        // STOP ALL
+        metronomes.forEach(m => {
+            if (m.isPlaying) m.toggle();
+        });
+    } else {
+        // START ALL
         const now = audioContext.currentTime;
         const startDelay = 0.05;
 
+        // Start everyone
         metronomes.forEach(m => {
+            // We manually set state to avoid toggling logic interfering with sync start
+            m.isPlaying = true;
             m.currentBeat = 0;
             m.nextNoteTime = now + startDelay;
+
+            // Update UI for each
+            const btn = m.element.querySelector('.unit-play-btn');
+            btn.classList.add('playing');
+            btn.textContent = '⏹';
         });
 
-        playBtn.classList.add('playing');
-        playBtn.querySelector('.play-icon').textContent = '⏹';
-        playBtn.querySelector('.btn-text').textContent = 'ストップ';
-        scheduler();
-    } else {
-        clearTimeout(schedulerTimer);
-        playBtn.classList.remove('playing');
-        playBtn.querySelector('.play-icon').textContent = '▶';
-        playBtn.querySelector('.btn-text').textContent = 'スタート';
-        metronomes.forEach(m => m.clearVisuals());
+        startSchedulerLoop();
     }
 }
 
