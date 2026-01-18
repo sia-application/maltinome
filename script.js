@@ -1,18 +1,7 @@
-// Audio Context
+// Audio Context and Global State
 let audioContext = null;
 let isPlaying = false;
-let tempo = 120;
-let currentPattern = 'quarter';
-let clickMultiplier = 1;
-let offbeatMultiplier = 1;
-let currentBeat = 0;
-let isOffbeat = false;
-let accentEnabled = true;
-let subdivisionSound = false;
-let offbeatMuted = false;
-let mainMuted = false;
-let volume = 1.0;
-let offbeatVolume = 0.0;
+let metronomes = [];
 let schedulerTimer = null;
 let nextNoteTime = 0;
 let scheduleAheadTime = 0.1;
@@ -20,384 +9,318 @@ let lookahead = 25;
 
 // DOM Elements
 const playBtn = document.getElementById('play-btn');
-const tempoSlider = document.getElementById('tempo-slider');
-const tempoInput = document.getElementById('tempo-input');
-const tempoDown = document.getElementById('tempo-down');
-const tempoUp = document.getElementById('tempo-up');
-const rhythmBtns = document.querySelectorAll('.rhythm-btn');
-const beatDots = document.getElementById('beat-dots');
-const offbeatToggle = document.getElementById('offbeat-toggle');
-const accentToggle = document.getElementById('accent-toggle');
-const offbeatMuteBtn = document.getElementById('offbeat-mute-btn');
-const mainMuteBtn = document.getElementById('main-mute-btn');
-const volumeSlider = document.getElementById('volume-slider');
-const volumeDisplay = document.getElementById('volume-display');
-const offbeatVolumeSlider = document.getElementById('offbeat-volume-slider');
-const offbeatVolumeDisplay = document.getElementById('offbeat-volume-display');
-const mainVolumeUpBtn = document.getElementById('main-volume-up');
-const offbeatVolumeUpBtn = document.getElementById('offbeat-volume-up');
-const multiplierBtns = document.querySelectorAll('.multiplier-btn');
-const offbeatMultBtns = document.querySelectorAll('.offbeat-mult-btn');
+const addMetronomeBtn = document.getElementById('add-metronome-btn');
+const metronomesContainer = document.getElementById('metronomes-container');
+const metronomeTemplate = document.getElementById('metronome-template');
 
 // Pattern Definitions
 const patterns = {
-    'quarter': {
-        beats: 4,
-        subdivisions: 1,
-        notes: [1, 1, 1, 1] // All beats sound
-    },
-    'triplet': {
-        beats: 3,
-        subdivisions: 1,
-        notes: [1, 1, 1] // All triplet notes sound
-    },
-    'triplet-hollow': {
-        beats: 3,
-        subdivisions: 1,
-        notes: [1, 0, 1] // First and third sound, middle is silent
-    },
-    'sextuplet': {
-        beats: 6,
-        subdivisions: 1,
-        notes: [1, 1, 1, 1, 1, 1]
-    }
+    'quarter': { beats: 4, subdivisions: 1, notes: [1, 1, 1, 1] },
+    'triplet': { beats: 3, subdivisions: 1, notes: [1, 1, 1] },
+    'triplet-hollow': { beats: 3, subdivisions: 1, notes: [1, 0, 1] },
+    'sextuplet': { beats: 6, subdivisions: 1, notes: [1, 1, 1, 1, 1, 1] }
 };
 
-// Initialize
-function init() {
-    updateTempoDisplay();
-    updateBeatDots();
-    setupEventListeners();
-}
+class Metronome {
+    constructor(id) {
+        this.id = id;
+        this.tempo = 120;
+        this.currentPattern = 'quarter';
+        this.clickMultiplier = 1;
+        this.offbeatMultiplier = 1;
+        this.currentBeat = 0;
+        this.isOffbeat = false;
+        this.accentEnabled = true;
+        this.volume = 1.0;
+        this.offbeatVolume = 0.0;
 
-// Setup Event Listeners
-function setupEventListeners() {
-    playBtn.addEventListener('click', togglePlay);
+        this.element = this.createUI();
+        this.setupEventListeners();
+    }
 
-    tempoSlider.addEventListener('input', (e) => {
-        tempo = parseInt(e.target.value);
-        updateTempoDisplay();
-    });
+    createUI() {
+        const clone = metronomeTemplate.content.cloneNode(true);
+        const unit = clone.querySelector('.metronome-unit');
 
-    tempoDown.addEventListener('click', () => {
-        tempo = Math.max(5, tempo - 1);
-        tempoSlider.value = tempo;
-        updateTempoDisplay();
-    });
+        // Append to container
+        metronomesContainer.appendChild(unit);
+        return unit;
+    }
 
-    tempoUp.addEventListener('click', () => {
-        tempo = Math.min(999, tempo + 1);
-        tempoSlider.value = tempo;
-        updateTempoDisplay();
-    });
+    remove() {
+        this.element.remove();
+        metronomes = metronomes.filter(m => m !== this);
+    }
 
-    tempoInput.addEventListener('change', (e) => {
-        let val = parseInt(e.target.value);
-        if (isNaN(val)) val = 120;
-        val = Math.max(5, Math.min(999, val));
-        tempo = val;
-        tempoSlider.value = tempo;
-        updateTempoDisplay();
-    });
+    setupEventListeners() {
+        const el = this.element;
 
-    rhythmBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            rhythmBtns.forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            currentPattern = btn.dataset.pattern;
-            currentBeat = 0;
-            updateBeatDots();
+        // Removing
+        el.querySelector('.remove-btn').addEventListener('click', () => this.remove());
+
+        // Tempo
+        const tempoInput = el.querySelector('.tempo-input');
+        const tempoSlider = el.querySelector('.tempo-slider');
+        const updateTempo = (val) => {
+            let v = parseInt(val);
+            if (isNaN(v)) v = 120;
+            v = Math.max(5, Math.min(999, v));
+            this.tempo = v;
+            tempoInput.value = v;
+            tempoSlider.value = v;
+        };
+
+        tempoInput.addEventListener('change', (e) => updateTempo(e.target.value));
+        tempoSlider.addEventListener('input', (e) => updateTempo(e.target.value));
+        el.querySelector('.tempo-down').addEventListener('click', () => updateTempo(this.tempo - 1));
+        el.querySelector('.tempo-up').addEventListener('click', () => updateTempo(this.tempo + 1));
+
+        // Rhythm Patterns
+        const rhythmBtns = el.querySelectorAll('.rhythm-btn');
+        rhythmBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                rhythmBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                this.currentPattern = btn.dataset.pattern;
+                this.currentBeat = 0;
+                this.updateBeatDots();
+            });
         });
-    });
 
-    multiplierBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            multiplierBtns.forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            clickMultiplier = parseInt(btn.dataset.multiplier);
+        // Volume
+        const volSlider = el.querySelector('.volume-slider');
+        const volDisplay = el.querySelector('.volume-display');
+        const muteBtn = el.querySelector('.main-mute-btn');
+
+        const updateVol = (val) => {
+            this.volume = parseInt(val) / 100;
+            volSlider.value = val;
+            volDisplay.textContent = val + '%';
+            muteBtn.textContent = this.volume === 0 ? '🔇' : '🔈';
+            muteBtn.classList.toggle('muted', this.volume === 0);
+        };
+
+        volSlider.addEventListener('input', (e) => updateVol(e.target.value));
+        muteBtn.addEventListener('click', () => updateVol(Math.max(0, parseInt(volSlider.value) - 100)));
+        el.querySelector('.main-volume-up').addEventListener('click', () => updateVol(Math.min(500, parseInt(volSlider.value) + 100)));
+
+        // Offbeat Volume
+        const offSlider = el.querySelector('.offbeat-volume-slider');
+        const offDisplay = el.querySelector('.offbeat-volume-display');
+        const offMuteBtn = el.querySelector('.offbeat-mute-btn');
+
+        const updateOffVol = (val) => {
+            this.offbeatVolume = parseInt(val) / 100;
+            offSlider.value = val;
+            offDisplay.textContent = val + '%';
+            offMuteBtn.textContent = this.offbeatVolume === 0 ? '🔇' : '🔈';
+            offMuteBtn.classList.toggle('muted', this.offbeatVolume === 0);
+        };
+
+        offSlider.addEventListener('input', (e) => updateOffVol(e.target.value));
+        offMuteBtn.addEventListener('click', () => updateOffVol(Math.max(0, parseInt(offSlider.value) - 10)));
+        el.querySelector('.offbeat-volume-up').addEventListener('click', () => updateOffVol(Math.min(500, parseInt(offSlider.value) + 10)));
+
+        // Multipliers
+        const multBtns = el.querySelectorAll('.multiplier-btn');
+        multBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                multBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                this.clickMultiplier = parseInt(btn.dataset.multiplier);
+            });
         });
-    });
 
-    offbeatMultBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            offbeatMultBtns.forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            offbeatMultiplier = parseInt(btn.dataset.multiplier);
+        const offMultBtns = el.querySelectorAll('.offbeat-mult-btn');
+        offMultBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                offMultBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                this.offbeatMultiplier = parseInt(btn.dataset.multiplier);
+            });
         });
-    });
 
-    offbeatToggle.addEventListener('click', () => {
-        isOffbeat = !isOffbeat;
-        offbeatToggle.classList.toggle('offbeat', isOffbeat);
-    });
+        // Toggles
+        const offToggle = el.querySelector('.offbeat-toggle');
+        offToggle.addEventListener('click', () => {
+            this.isOffbeat = !this.isOffbeat;
+            offToggle.classList.toggle('offbeat', this.isOffbeat);
+        });
 
-    accentToggle.addEventListener('click', () => {
-        accentEnabled = !accentEnabled;
-        accentToggle.classList.toggle('active', accentEnabled);
-    });
+        const accToggle = el.querySelector('.accent-toggle');
+        accToggle.addEventListener('click', () => {
+            this.accentEnabled = !this.accentEnabled;
+            accToggle.classList.toggle('active', this.accentEnabled);
+        });
 
-    // Volume down buttons
-    offbeatMuteBtn.addEventListener('click', () => {
-        const newValue = Math.max(0, parseInt(offbeatVolumeSlider.value) - 10);
-        offbeatVolumeSlider.value = newValue;
-        offbeatVolume = newValue / 100;
-        offbeatVolumeDisplay.textContent = newValue + '%';
-        offbeatMuteBtn.textContent = newValue === 0 ? '🔇' : '🔈';
-        offbeatMuteBtn.classList.toggle('muted', newValue === 0);
-    });
+        // Initialize Dots
+        this.updateBeatDots();
+    }
 
-    mainMuteBtn.addEventListener('click', () => {
-        const newValue = Math.max(0, parseInt(volumeSlider.value) - 100);
-        volumeSlider.value = newValue;
-        volume = newValue / 100;
-        volumeDisplay.textContent = newValue + '%';
-        mainMuteBtn.textContent = newValue === 0 ? '🔇' : '🔈';
-        mainMuteBtn.classList.toggle('muted', newValue === 0);
-    });
-
-    volumeSlider.addEventListener('input', (e) => {
-        volume = parseInt(e.target.value) / 100;
-        volumeDisplay.textContent = e.target.value + '%';
-        mainMuteBtn.textContent = parseInt(e.target.value) === 0 ? '🔇' : '🔈';
-        mainMuteBtn.classList.toggle('muted', parseInt(e.target.value) === 0);
-    });
-
-    offbeatVolumeSlider.addEventListener('input', (e) => {
-        offbeatVolume = parseInt(e.target.value) / 100;
-        offbeatVolumeDisplay.textContent = e.target.value + '%';
-        offbeatMuteBtn.textContent = parseInt(e.target.value) === 0 ? '🔇' : '🔈';
-        offbeatMuteBtn.classList.toggle('muted', parseInt(e.target.value) === 0);
-    });
-
-    // Volume up buttons
-    mainVolumeUpBtn.addEventListener('click', () => {
-        const newValue = Math.min(500, parseInt(volumeSlider.value) + 100);
-        volumeSlider.value = newValue;
-        volume = newValue / 100;
-        volumeDisplay.textContent = newValue + '%';
-        mainMuteBtn.textContent = newValue === 0 ? '🔇' : '🔈';
-        mainMuteBtn.classList.toggle('muted', newValue === 0);
-    });
-
-    offbeatVolumeUpBtn.addEventListener('click', () => {
-        const newValue = Math.min(500, parseInt(offbeatVolumeSlider.value) + 10);
-        offbeatVolumeSlider.value = newValue;
-        offbeatVolume = newValue / 100;
-        offbeatVolumeDisplay.textContent = newValue + '%';
-        offbeatMuteBtn.textContent = newValue === 0 ? '🔇' : '🔈';
-        offbeatMuteBtn.classList.toggle('muted', newValue === 0);
-    });
-}
-
-// Update Tempo Display
-function updateTempoDisplay() {
-    tempoInput.value = tempo;
-}
-
-// Update Beat Dots
-function updateBeatDots() {
-    const pattern = patterns[currentPattern];
-    beatDots.innerHTML = '';
-
-    for (let i = 0; i < pattern.beats; i++) {
-        const dot = document.createElement('span');
-        dot.className = 'dot';
-        if (pattern.notes[i] === 0) {
-            dot.style.opacity = '0.3';
+    updateBeatDots() {
+        const container = this.element.querySelector('.beat-dots');
+        const pattern = patterns[this.currentPattern];
+        container.innerHTML = '';
+        for (let i = 0; i < pattern.beats; i++) {
+            const dot = document.createElement('span');
+            dot.className = 'dot';
+            if (pattern.notes[i] === 0) dot.style.opacity = '0.3';
+            container.appendChild(dot);
         }
-        beatDots.appendChild(dot);
-    }
-}
-
-// Toggle Play/Stop
-function togglePlay() {
-    if (!audioContext) {
-        audioContext = new (window.AudioContext || window.webkitAudioContext)();
     }
 
-    if (isPlaying) {
-        stop();
-    } else {
-        start();
-    }
-}
-
-// Start Metronome
-function start() {
-    isPlaying = true;
-    currentBeat = 0;
-
-    // Resume audio context if suspended (required for some browsers)
-    if (audioContext.state === 'suspended') {
-        audioContext.resume();
-    }
-
-    // Add small delay before first note to prevent audio glitch
-    nextNoteTime = audioContext.currentTime + 0.1;
-
-    playBtn.classList.add('playing');
-    playBtn.querySelector('.play-icon').textContent = '⏹';
-    playBtn.querySelector('.btn-text').textContent = 'ストップ';
-
-    scheduler();
-}
-
-// Stop Metronome
-function stop() {
-    isPlaying = false;
-    clearTimeout(schedulerTimer);
-
-    playBtn.classList.remove('playing');
-    playBtn.querySelector('.play-icon').textContent = '▶';
-    playBtn.querySelector('.btn-text').textContent = 'スタート';
-
-    // Clear active dots
-    document.querySelectorAll('.beat-dots .dot').forEach(dot => {
-        dot.classList.remove('active', 'first');
-    });
-}
-
-// Scheduler
-function scheduler() {
-    while (nextNoteTime < audioContext.currentTime + scheduleAheadTime) {
-        scheduleNote(currentBeat, nextNoteTime);
-        nextNote();
-    }
-    schedulerTimer = setTimeout(scheduler, lookahead);
-}
-
-// Schedule Note
-// Schedule Note
-function scheduleNote(beatNumber, time) {
-    const pattern = patterns[currentPattern];
-
-    // Visual feedback
-    setTimeout(() => {
-        if (!isPlaying) return;
-
-        const dots = document.querySelectorAll('.beat-dots .dot');
+    visualizeBeat(beatNumber) {
+        const dots = this.element.querySelectorAll('.dot');
         dots.forEach((dot, i) => {
             dot.classList.remove('active', 'first');
             if (i === beatNumber) {
                 dot.classList.add('active');
-                if (i === 0) {
-                    dot.classList.add('first');
-                }
+                if (i === 0) dot.classList.add('first');
             }
         });
+    }
+
+    clearVisuals() {
+        this.element.querySelectorAll('.dot').forEach(d => d.classList.remove('active', 'first'));
+    }
+}
+
+
+// Scheduler Logic
+function scheduler() {
+    while (nextNoteTime < audioContext.currentTime + scheduleAheadTime) {
+        metronomes.forEach(m => scheduleMetronomeNote(m, nextNoteTime));
+        // We advance time for all metronomes together, effectively locking them to the same scheduler tick?
+        // Actually, each metronome has its own tempo. But we need a global lookdown.
+        // Wait, if tempos differ, we can't share one global "beat index" or "nextNoteTime" increment effectively
+        // unless they are phase-locked or we schedule purely by absolute time.
+        // For independent tempos, each metronome needs its own `nextNoteTime`.
+
+        // REVISION: The global loop should just drive the clock. 
+        // But `scheduler` creates the loop. We need to iterate metronomes and let THEM schedule if their time is up.
+        // However, standard pattern is `while (nextNoteTime < ...)`
+        // If they have different tempos, they have different `nextNoteTime`.
+
+        // Correct approach for Multi-Tempo:
+        // Checking each metronome inside the loop is tricky if they drift apart significantly in `nextNoteTime`.
+        // Better: Loop through metronomes, and for EACH metronome, loop while IT's time is up.
+
+        break; // Breaking out to fix logic in the loop below
+    }
+    // Correct loop implementation inside scheduler function:
+    metronomes.forEach(m => {
+        // Initialize nextNoteTime for new metronomes if needed, or track it on the instance
+        if (!m.nextNoteTime) m.nextNoteTime = audioContext.currentTime + 0.1;
+
+        while (m.nextNoteTime < audioContext.currentTime + scheduleAheadTime) {
+            scheduleMetronomeNote(m, m.nextNoteTime);
+            advanceMetronomeNote(m);
+        }
+    });
+
+    if (isPlaying) {
+        schedulerTimer = setTimeout(scheduler, lookahead);
+    }
+}
+
+function scheduleMetronomeNote(metronome, time) {
+    const pattern = patterns[metronome.currentPattern];
+    const beatNumber = metronome.currentBeat;
+
+    // Visuals
+    setTimeout(() => {
+        if (isPlaying) metronome.visualizeBeat(beatNumber);
     }, (time - audioContext.currentTime) * 1000);
 
-    // Check if this beat should sound
-    if (pattern.notes[beatNumber] === 0) {
-        return; // Silent beat
-    }
+    if (pattern.notes[beatNumber] === 0) return;
 
-    // Calculate durations and intervals
-    let beatDuration;
-    if (currentPattern === 'quarter') {
-        beatDuration = 60.0 / tempo;
-    } else if (currentPattern === 'sextuplet') {
-        beatDuration = 60.0 / tempo / 6;
-    } else {
-        beatDuration = 60.0 / tempo / 3;
-    }
+    // Durations
+    let beatDuration = 60.0 / metronome.tempo; // Quarter
+    if (metronome.currentPattern === 'sextuplet') beatDuration /= 6;
+    else if (metronome.currentPattern !== 'quarter') beatDuration /= 3; // Triplet variants
 
-    const mainClickInterval = beatDuration / clickMultiplier;
-    const offbeatClickInterval = beatDuration / offbeatMultiplier;
-    // Offset is half of the main click interval
-    const offbeatOffset = mainClickInterval / 2;
+    const mainInterval = beatDuration / metronome.clickMultiplier;
+    const offInterval = beatDuration / metronome.offbeatMultiplier;
+    const offset = mainInterval / 2;
 
-    let mainStartTime, offbeatStartTime;
+    let mainStart = metronome.isOffbeat ? time + offset : time;
+    let offStart = metronome.isOffbeat ? time : time + offset;
 
-    if (isOffbeat) {
-        // 裏拍モード: オフビート音から鳴る
-        // Offbeat sounds at the beat start
-        offbeatStartTime = time;
-        // Main sounds delayed by offset
-        mainStartTime = time + offbeatOffset;
-    } else {
-        // 表拍モード
-        // Main sounds at the beat start
-        mainStartTime = time;
-        // Offbeat sounds delayed by offset
-        offbeatStartTime = time + offbeatOffset;
-    }
-
-    // Play main clicks based on multiplier
-    if (volume > 0) {
-        for (let i = 0; i < clickMultiplier; i++) {
-            const clickTime = mainStartTime + (i * mainClickInterval);
-
-            const osc = audioContext.createOscillator();
-            const gainNode = audioContext.createGain();
-
-            // Use square wave for louder, punchier sound
-            osc.type = 'square';
-
-            // First click of first beat is higher pitch if accent enabled
-            if (beatNumber === 0 && i === 0 && accentEnabled) {
-                osc.frequency.value = 1000; // Higher pitch for accent
-            } else {
-                osc.frequency.value = 800;
-            }
-
-            // Set initial gain with volume control
-            gainNode.gain.setValueAtTime(volume, clickTime);
-
-            osc.connect(gainNode);
-            gainNode.connect(audioContext.destination);
-
-            // Longer sound for more presence
-            osc.start(clickTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.001, clickTime + 0.05);
-            osc.stop(clickTime + 0.05);
+    // Main Sounds
+    if (metronome.volume > 0) {
+        for (let i = 0; i < metronome.clickMultiplier; i++) {
+            playTone(mainStart + i * mainInterval,
+                (beatNumber === 0 && i === 0 && metronome.accentEnabled) ? 1000 : 800,
+                metronome.volume, 'square');
         }
     }
 
-    // Play subdivision sound (offbeat click) - if volume > 0
-    if (offbeatVolume > 0) {
-        for (let i = 0; i < offbeatMultiplier; i++) {
-            const clickTime = offbeatStartTime + (i * offbeatClickInterval);
-
-            const subOsc = audioContext.createOscillator();
-            const subGain = audioContext.createGain();
-
-            // Use square wave for louder sound
-            subOsc.type = 'square';
-            subOsc.frequency.value = 600;
-
-            // Set initial gain with offbeat volume control
-            subGain.gain.setValueAtTime(offbeatVolume, clickTime);
-
-            subOsc.connect(subGain);
-            subGain.connect(audioContext.destination);
-
-            subOsc.start(clickTime);
-            subGain.gain.exponentialRampToValueAtTime(0.001, clickTime + 0.05);
-            subOsc.stop(clickTime + 0.05);
+    // Offbeat Sounds
+    if (metronome.offbeatVolume > 0) {
+        for (let i = 0; i < metronome.offbeatMultiplier; i++) {
+            playTone(offStart + i * offInterval, 600, metronome.offbeatVolume, 'square');
         }
     }
 }
 
-// Next Note
-function nextNote() {
-    const pattern = patterns[currentPattern];
-
-    // Calculate note duration based on pattern
-    let noteDuration;
-    if (currentPattern === 'quarter') {
-        // Quarter notes: seconds per beat
-        noteDuration = 60.0 / tempo;
-    } else if (currentPattern === 'sextuplet') {
-        noteDuration = 60.0 / tempo / 6;
-    } else {
-        // Triplets: 3 notes per beat, so each note is 1/3 of a beat
-        noteDuration = 60.0 / tempo / 3;
-    }
-
-    nextNoteTime += noteDuration;
-    currentBeat = (currentBeat + 1) % pattern.beats;
+function playTone(time, freq, vol, type) {
+    const osc = audioContext.createOscillator();
+    const gain = audioContext.createGain();
+    osc.type = type;
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(vol, time);
+    gain.gain.exponentialRampToValueAtTime(0.001, time + 0.05);
+    osc.connect(gain);
+    gain.connect(audioContext.destination);
+    osc.start(time);
+    osc.stop(time + 0.05);
 }
 
-// Initialize on page load
-init();
+function advanceMetronomeNote(metronome) {
+    const pattern = patterns[metronome.currentPattern];
+    let duration = 60.0 / metronome.tempo;
+    if (metronome.currentPattern === 'sextuplet') duration /= 6;
+    else if (metronome.currentPattern !== 'quarter') duration /= 3;
+
+    metronome.nextNoteTime += duration;
+    metronome.currentBeat = (metronome.currentBeat + 1) % pattern.beats;
+}
+
+// Global Controls
+function togglePlay() {
+    if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+    isPlaying = !isPlaying;
+
+    if (isPlaying) {
+        if (audioContext.state === 'suspended') audioContext.resume();
+        // Reset timing for all
+        const now = audioContext.currentTime;
+        metronomes.forEach(m => {
+            m.currentBeat = 0;
+            m.nextNoteTime = now + 0.1;
+        });
+        playBtn.classList.add('playing');
+        playBtn.querySelector('.play-icon').textContent = '⏹';
+        playBtn.querySelector('.btn-text').textContent = 'ストップ';
+        scheduler();
+    } else {
+        clearTimeout(schedulerTimer);
+        playBtn.classList.remove('playing');
+        playBtn.querySelector('.play-icon').textContent = '▶';
+        playBtn.querySelector('.btn-text').textContent = 'スタート';
+        metronomes.forEach(m => m.clearVisuals());
+    }
+}
+
+function addMetronome() {
+    const m = new Metronome(Date.now());
+    metronomes.push(m);
+}
+
+// Init
+playBtn.addEventListener('click', togglePlay);
+addMetronomeBtn.addEventListener('click', addMetronome);
+
+// Add initial metronome
+addMetronome();

@@ -18,28 +18,44 @@
         </header>
 
         <main>
+            <div id="metronomes-container"></div>
+
+            <button class="add-btn" id="add-metronome-btn" title="メトロノームを追加">＋</button>
+
+            <!-- Play/Stop Button -->
+            <button class="play-btn" id="play-btn">
+                <span class="play-icon">▶</span>
+                <span class="btn-text">スタート</span>
+            </button>
+        </main>
+    </div>
+
+    <template id="metronome-template">
+        <div class="metronome-unit">
+            <button class="remove-btn" title="削除">×</button>
             <!-- Tempo Display -->
             <div class="tempo-display">
-                <input type="number" id="tempo-input" min="5" max="999" value="120">
+                <input type="number" class="tempo-input" min="5" max="999" value="120">
                 <span class="tempo-label">BPM</span>
             </div>
 
             <!-- Tempo Slider -->
             <div class="tempo-control">
-                <button class="tempo-btn" id="tempo-down">−</button>
-                <input type="range" id="tempo-slider" min="5" max="999" value="120">
-                <button class="tempo-btn" id="tempo-up">+</button>
+                <button class="tempo-btn tempo-down">−</button>
+                <input type="range" class="tempo-slider" min="5" max="999" value="120">
+                <button class="tempo-btn tempo-up">+</button>
             </div>
 
             <!-- Beat Indicator -->
             <div class="beat-indicator">
-                <div class="beat-dots" id="beat-dots">
+                <div class="beat-dots">
                     <span class="dot"></span>
                     <span class="dot"></span>
                     <span class="dot"></span>
                     <span class="dot"></span>
                 </div>
             </div>
+
             <!-- Rhythm Pattern Selection -->
             <div class="rhythm-section">
                 <h2>リズムパターン</h2>
@@ -82,17 +98,18 @@
                     </button>
                 </div>
             </div>
+
             <!-- Volume Control -->
             <div class="volume-section">
                 <h2>音量調整</h2>
                 <div class="volume-label">
                     <span>🔊 表拍</span>
-                    <span id="volume-display">100%</span>
+                    <span class="volume-display">100%</span>
                 </div>
                 <div class="volume-control">
-                    <button class="mute-btn" id="main-mute-btn" title="ミュート">🔈</button>
-                    <input type="range" id="volume-slider" min="0" max="500" value="100">
-                    <button class="volume-up-btn" id="main-volume-up" title="+100%">🔊</button>
+                    <button class="mute-btn main-mute-btn" title="ミュート">🔈</button>
+                    <input type="range" class="volume-slider" min="0" max="500" value="100">
+                    <button class="volume-up-btn main-volume-up" title="+100%">🔊</button>
                 </div>
             </div>
 
@@ -100,17 +117,14 @@
             <div class="volume-section offbeat-volume">
                 <div class="volume-label">
                     <span>🔊 裏拍</span>
-                    <span id="offbeat-volume-display">0%</span>
+                    <span class="offbeat-volume-display">0%</span>
                 </div>
                 <div class="volume-control">
-                    <button class="mute-btn muted" id="offbeat-mute-btn" title="ミュート">🔇</button>
-                    <input type="range" id="offbeat-volume-slider" min="0" max="500" value="0">
-                    <button class="volume-up-btn" id="offbeat-volume-up" title="+10%">🔊</button>
+                    <button class="mute-btn muted offbeat-mute-btn" title="ミュート">🔇</button>
+                    <input type="range" class="offbeat-volume-slider" min="0" max="500" value="0">
+                    <button class="volume-up-btn offbeat-volume-up" title="+10%">🔊</button>
                 </div>
-
             </div>
-
-
 
             <!-- Click Multiplier Selection -->
             <div class="multiplier-section">
@@ -138,7 +152,7 @@
             <!-- Offbeat Toggle -->
             <div class="offbeat-section">
                 <h2>その他の設定</h2>
-                <button class="offbeat-toggle" id="offbeat-toggle">
+                <button class="offbeat-toggle">
                     <span class="toggle-label">表拍開始</span>
                     <div class="toggle-switch">
                         <div class="toggle-slider"></div>
@@ -149,7 +163,7 @@
 
             <!-- Accent Toggle -->
             <div class="accent-section">
-                <button class="accent-toggle active" id="accent-toggle">
+                <button class="accent-toggle active">
                     <span class="accent-icon">🥁</span>
                     <span class="accent-label">1拍目にアクセント</span>
                     <div class="accent-switch">
@@ -157,15 +171,8 @@
                     </div>
                 </button>
             </div>
-
-
-
-            <!-- Play/Stop Button -->
-            <button class="play-btn" id="play-btn">
-                <span class="play-icon">▶</span>
-                <span class="btn-text">スタート</span>
-            </button>
-        </main>
+        </div>
+    </template>
     </div>
 
     <script src="script.js"></script>
