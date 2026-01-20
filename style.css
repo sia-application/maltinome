@@ -1051,6 +1051,7 @@ header h1 {
     margin-bottom: 20px;
     box-shadow: 0 15px 35px -10px rgba(0, 0, 0, 0.4),
         0 0 0 1px rgba(255, 255, 255, 0.08);
+    overflow: hidden;
 }
 
 .preset-header {
@@ -1068,12 +1069,14 @@ header h1 {
 
 .preset-controls {
     display: flex;
+    flex-wrap: wrap;
     gap: 8px;
     margin-bottom: 12px;
 }
 
 .preset-select {
-    flex: 1;
+    flex: 1 1 auto;
+    min-width: 0;
     padding: 12px 16px;
     border-radius: 12px;
     border: 2px solid var(--bg-glass);
@@ -1158,11 +1161,13 @@ header h1 {
 
 .preset-save-controls {
     display: flex;
+    flex-wrap: wrap;
     gap: 8px;
 }
 
 .preset-name-input {
-    flex: 1;
+    flex: 1 1 auto;
+    min-width: 0;
     padding: 12px 16px;
     border-radius: 12px;
     border: 2px solid var(--bg-glass);
