@@ -1042,3 +1042,180 @@ header h1 {
     opacity: 0.7;
     font-family: 'Outfit', sans-serif;
 }
+
+/* Preset Section */
+.preset-section {
+    background: var(--bg-card);
+    border-radius: 24px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 15px 35px -10px rgba(0, 0, 0, 0.4),
+        0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.preset-header {
+    text-align: center;
+    margin-bottom: 16px;
+}
+
+.preset-header h2 {
+    font-size: 1rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin: 0;
+}
+
+.preset-controls {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.preset-select {
+    flex: 1;
+    padding: 12px 16px;
+    border-radius: 12px;
+    border: 2px solid var(--bg-glass);
+    background: var(--bg-dark);
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    font-family: 'Outfit', sans-serif;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23a0a0a0' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 36px;
+}
+
+.preset-select:hover,
+.preset-select:focus {
+    border-color: var(--secondary);
+    outline: none;
+}
+
+.preset-select option {
+    background: var(--bg-dark);
+    color: var(--text-primary);
+    padding: 8px;
+}
+
+.preset-btn {
+    padding: 12px 16px;
+    border-radius: 12px;
+    border: 2px solid var(--bg-glass);
+    background: var(--bg-glass);
+    color: var(--text-primary);
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.preset-btn:hover {
+    border-color: var(--secondary);
+    background: rgba(162, 155, 254, 0.1);
+    transform: translateY(-2px);
+}
+
+.preset-btn:active {
+    transform: translateY(0);
+}
+
+.preset-btn.save-btn {
+    background: linear-gradient(135deg, #27ae60, #2ecc71);
+    border-color: transparent;
+    color: white;
+    font-weight: 600;
+}
+
+.preset-btn.save-btn:hover {
+    background: linear-gradient(135deg, #2ecc71, #27ae60);
+    box-shadow: 0 5px 15px rgba(46, 204, 113, 0.3);
+}
+
+.preset-btn.load-btn:hover {
+    border-color: var(--primary);
+    background: rgba(108, 92, 231, 0.2);
+}
+
+.preset-btn.delete-btn:hover {
+    border-color: #e74c3c;
+    background: rgba(231, 76, 60, 0.2);
+    color: #e74c3c;
+}
+
+.preset-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.preset-save-controls {
+    display: flex;
+    gap: 8px;
+}
+
+.preset-name-input {
+    flex: 1;
+    padding: 12px 16px;
+    border-radius: 12px;
+    border: 2px solid var(--bg-glass);
+    background: var(--bg-dark);
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    font-family: 'Outfit', sans-serif;
+    transition: all 0.3s ease;
+}
+
+.preset-name-input:focus {
+    border-color: var(--secondary);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(162, 155, 254, 0.2);
+}
+
+.preset-name-input::placeholder {
+    color: var(--text-secondary);
+    opacity: 0.6;
+}
+
+/* Toast Notification */
+.toast {
+    position: fixed;
+    bottom: 100px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    padding: 14px 24px;
+    background: var(--bg-card);
+    color: var(--text-primary);
+    border-radius: 12px;
+    font-size: 0.95rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4),
+        0 0 0 1px rgba(255, 255, 255, 0.1);
+    z-index: 1000;
+    opacity: 0;
+    transition: all 0.3s ease;
+    pointer-events: none;
+}
+
+.toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+.toast.success {
+    border-left: 4px solid #27ae60;
+}
+
+.toast.error {
+    border-left: 4px solid #e74c3c;
+}
+
+.toast.info {
+    border-left: 4px solid var(--primary);
+}

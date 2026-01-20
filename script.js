@@ -479,3 +479,299 @@ addMetronomeBtn.addEventListener('click', addMetronome);
 
 // Add initial metronome
 addMetronome();
+
+// ==========================================
+// Preset Management
+// ==========================================
+
+const PRESET_STORAGE_KEY = 'maltinome_presets';
+
+// Preset DOM Elements
+const presetSelect = document.getElementById('preset-select');
+const presetNameInput = document.getElementById('preset-name-input');
+const savePresetBtn = document.getElementById('save-preset-btn');
+const loadPresetBtn = document.getElementById('load-preset-btn');
+const deletePresetBtn = document.getElementById('delete-preset-btn');
+
+// Toast notification element
+let toastElement = null;
+
+function createToast() {
+    if (!toastElement) {
+        toastElement = document.createElement('div');
+        toastElement.className = 'toast';
+        document.body.appendChild(toastElement);
+    }
+    return toastElement;
+}
+
+function showToast(message, type = 'info') {
+    const toast = createToast();
+    toast.textContent = message;
+    toast.className = `toast ${type}`;
+
+    // Trigger show
+    requestAnimationFrame(() => {
+        toast.classList.add('show');
+    });
+
+    // Hide after delay
+    setTimeout(() => {
+        toast.classList.remove('show');
+    }, 2500);
+}
+
+// Get all presets from LocalStorage
+function getPresets() {
+    try {
+        const data = localStorage.getItem(PRESET_STORAGE_KEY);
+        return data ? JSON.parse(data) : {};
+    } catch (e) {
+        console.error('Failed to load presets:', e);
+        return {};
+    }
+}
+
+// Save presets to LocalStorage
+function savePresetsToStorage(presets) {
+    try {
+        localStorage.setItem(PRESET_STORAGE_KEY, JSON.stringify(presets));
+        return true;
+    } catch (e) {
+        console.error('Failed to save presets:', e);
+        return false;
+    }
+}
+
+// Extract current state from a metronome
+function extractMetronomeState(metronome) {
+    return {
+        tempo: metronome.tempo,
+        currentPattern: metronome.currentPattern,
+        clickMultiplier: metronome.clickMultiplier,
+        offbeatMultiplier: metronome.offbeatMultiplier,
+        accentEnabled: metronome.accentEnabled,
+        volume: metronome.volume,
+        offbeatVolume: metronome.offbeatVolume,
+        pitch: metronome.pitch,
+        isOffbeat: metronome.isOffbeat
+    };
+}
+
+// Apply state to a metronome and update its UI
+function applyMetronomeState(metronome, state) {
+    const el = metronome.element;
+
+    // Tempo
+    metronome.tempo = state.tempo || 120;
+    el.querySelector('.tempo-input').value = metronome.tempo;
+    el.querySelector('.tempo-slider').value = metronome.tempo;
+
+    // Pattern
+    metronome.currentPattern = state.currentPattern || 'quarter';
+    const rhythmBtns = el.querySelectorAll('.rhythm-btn');
+    rhythmBtns.forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.pattern === metronome.currentPattern);
+    });
+    metronome.updateBeatDots();
+
+    // Click Multiplier
+    metronome.clickMultiplier = state.clickMultiplier || 1;
+    const multBtns = el.querySelectorAll('.multiplier-btn');
+    multBtns.forEach(btn => {
+        btn.classList.toggle('active', parseInt(btn.dataset.multiplier) === metronome.clickMultiplier);
+    });
+
+    // Offbeat Multiplier
+    metronome.offbeatMultiplier = state.offbeatMultiplier || 1;
+    const offMultBtns = el.querySelectorAll('.offbeat-mult-btn');
+    offMultBtns.forEach(btn => {
+        btn.classList.toggle('active', parseInt(btn.dataset.multiplier) === metronome.offbeatMultiplier);
+    });
+
+    // Volume
+    metronome.volume = state.volume !== undefined ? state.volume : 1.0;
+    const volVal = Math.round(metronome.volume * 100);
+    el.querySelector('.volume-slider').value = volVal;
+    el.querySelector('.volume-display').textContent = volVal + '%';
+    const muteBtn = el.querySelector('.main-mute-btn');
+    muteBtn.textContent = metronome.volume === 0 ? '🔇' : '🔈';
+    muteBtn.classList.toggle('muted', metronome.volume === 0);
+
+    // Offbeat Volume
+    metronome.offbeatVolume = state.offbeatVolume !== undefined ? state.offbeatVolume : 0;
+    const offVolVal = Math.round(metronome.offbeatVolume * 100);
+    el.querySelector('.offbeat-volume-slider').value = offVolVal;
+    el.querySelector('.offbeat-volume-display').textContent = offVolVal + '%';
+    const offMuteBtn = el.querySelector('.offbeat-mute-btn');
+    offMuteBtn.textContent = metronome.offbeatVolume === 0 ? '🔇' : '🔈';
+    offMuteBtn.classList.toggle('muted', metronome.offbeatVolume === 0);
+
+    // Pitch
+    metronome.pitch = state.pitch || 800;
+    const pitchSlider = el.querySelector('.pitch-slider');
+    const pitchDisplay = el.querySelector('.pitch-display');
+    if (pitchSlider && pitchDisplay) {
+        pitchSlider.value = metronome.pitch;
+        pitchDisplay.textContent = metronome.pitch + 'Hz';
+    }
+
+    // Accent
+    metronome.accentEnabled = state.accentEnabled !== undefined ? state.accentEnabled : true;
+    el.querySelector('.accent-toggle').classList.toggle('active', metronome.accentEnabled);
+
+    // Offbeat toggle
+    metronome.isOffbeat = state.isOffbeat || false;
+    el.querySelector('.offbeat-toggle').classList.toggle('offbeat', metronome.isOffbeat);
+}
+
+// Save current preset
+function savePreset() {
+    const name = presetNameInput.value.trim();
+
+    if (!name) {
+        showToast('プリセット名を入力してください', 'error');
+        presetNameInput.focus();
+        return;
+    }
+
+    if (metronomes.length === 0) {
+        showToast('保存するメトロノームがありません', 'error');
+        return;
+    }
+
+    const presets = getPresets();
+    const isOverwrite = presets.hasOwnProperty(name);
+
+    // Create preset data
+    presets[name] = {
+        createdAt: isOverwrite ? presets[name].createdAt : Date.now(),
+        updatedAt: Date.now(),
+        metronomes: metronomes.map(m => extractMetronomeState(m))
+    };
+
+    if (savePresetsToStorage(presets)) {
+        showToast(isOverwrite ? `「${name}」を上書き保存しました` : `「${name}」を保存しました`, 'success');
+        presetNameInput.value = '';
+        refreshPresetSelect();
+        presetSelect.value = name;
+    } else {
+        showToast('保存に失敗しました', 'error');
+    }
+}
+
+// Load selected preset
+function loadPreset() {
+    const name = presetSelect.value;
+
+    if (!name) {
+        showToast('プリセットを選択してください', 'info');
+        return;
+    }
+
+    const presets = getPresets();
+    const preset = presets[name];
+
+    if (!preset) {
+        showToast('プリセットが見つかりません', 'error');
+        return;
+    }
+
+    // Stop all playing metronomes
+    metronomes.forEach(m => {
+        if (m.isPlaying) m.toggle();
+    });
+
+    // Clear existing metronomes
+    while (metronomes.length > 0) {
+        metronomes[0].remove();
+    }
+
+    // Create metronomes from preset
+    preset.metronomes.forEach(state => {
+        const m = new Metronome(Date.now() + Math.random());
+        metronomes.push(m);
+        applyMetronomeState(m, state);
+    });
+
+    showToast(`「${name}」を読み込みました`, 'success');
+}
+
+// Delete selected preset
+function deletePreset() {
+    const name = presetSelect.value;
+
+    if (!name) {
+        showToast('削除するプリセットを選択してください', 'info');
+        return;
+    }
+
+    if (!confirm(`「${name}」を削除しますか？`)) {
+        return;
+    }
+
+    const presets = getPresets();
+
+    if (presets.hasOwnProperty(name)) {
+        delete presets[name];
+
+        if (savePresetsToStorage(presets)) {
+            showToast(`「${name}」を削除しました`, 'success');
+            refreshPresetSelect();
+        } else {
+            showToast('削除に失敗しました', 'error');
+        }
+    }
+}
+
+// Refresh preset select dropdown
+function refreshPresetSelect() {
+    const presets = getPresets();
+    const currentValue = presetSelect.value;
+
+    // Clear existing options except first
+    while (presetSelect.options.length > 1) {
+        presetSelect.remove(1);
+    }
+
+    // Add preset options sorted by name
+    const names = Object.keys(presets).sort((a, b) => a.localeCompare(b, 'ja'));
+
+    names.forEach(name => {
+        const option = document.createElement('option');
+        option.value = name;
+        option.textContent = name;
+        presetSelect.appendChild(option);
+    });
+
+    // Restore selection if still exists
+    if (names.includes(currentValue)) {
+        presetSelect.value = currentValue;
+    }
+
+    // Update button states
+    updatePresetButtonStates();
+}
+
+// Update button states based on selection
+function updatePresetButtonStates() {
+    const hasSelection = presetSelect.value !== '';
+    loadPresetBtn.disabled = !hasSelection;
+    deletePresetBtn.disabled = !hasSelection;
+}
+
+// Event Listeners for Preset Management
+savePresetBtn.addEventListener('click', savePreset);
+loadPresetBtn.addEventListener('click', loadPreset);
+deletePresetBtn.addEventListener('click', deletePreset);
+presetSelect.addEventListener('change', updatePresetButtonStates);
+
+// Allow Enter key to save preset
+presetNameInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+        savePreset();
+    }
+});
+
+// Initialize presets on load
+refreshPresetSelect();

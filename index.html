@@ -29,6 +29,25 @@
         </header>
 
         <main>
+            <!-- Preset Management Section -->
+            <div class="preset-section">
+                <div class="preset-header">
+                    <h2>プリセット</h2>
+                </div>
+                <div class="preset-controls">
+                    <select id="preset-select" class="preset-select">
+                        <option value="">-- プリセットを選択 --</option>
+                    </select>
+                    <button id="load-preset-btn" class="preset-btn load-btn" title="読み込み">📥</button>
+                    <button id="delete-preset-btn" class="preset-btn delete-btn" title="削除">🗑️</button>
+                </div>
+                <div class="preset-save-controls">
+                    <input type="text" id="preset-name-input" class="preset-name-input" placeholder="プリセット名を入力..."
+                        maxlength="30">
+                    <button id="save-preset-btn" class="preset-btn save-btn" title="保存">💾 保存</button>
+                </div>
+            </div>
+
             <div id="metronomes-container"></div>
 
             <button class="add-btn" id="add-metronome-btn" title="メトロノームを追加">＋</button>
