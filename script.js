@@ -583,41 +583,53 @@ function updatePipLoop() {
 }
 
 // PiP Button Handler
-pipBtn.addEventListener('click', async () => {
-    // 1. Initialize AudioContext if needed (Sync)
+// PiP Button Handler calls - strictly synchronous where possible
+pipBtn.addEventListener('click', () => {
+    // 1. Initialize AudioContext (Sync)
     if (!audioContext) {
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
     }
 
-    // 2. Setup Canvas/Video Stream (Sync)
+    // 2. Setup (Logic must run if not ready, but ideally prepared earlier)
     if (!pipCanvas) setupPip();
 
-    // 3. Resume AudioContext (Fire and Forget - DO NOT AWAIT)
-    // Awaiting here consumes the user activation token on strict browsers (iOS)
+    // 3. User Activation: iOS is extremely strict. 
+    // We must call video.play() AND requestPictureInPicture() in the same tick if possible.
+    // However, play() returns a promise.
+
+    // Resume audio context "in background"
     if (audioContext.state === 'suspended') {
-        audioContext.resume().catch(e => console.warn('Audio resume failed', e));
+        audioContext.resume().catch(() => { });
     }
 
-    try {
-        if (document.pictureInPictureElement) {
-            await document.exitPictureInPicture();
+    if (document.pictureInPictureElement) {
+        document.exitPictureInPicture().then(() => {
             isPipActive = false;
-        } else {
-            // 4. Play video immediately
-            // We await play() because it returns a promise, but it's usually fast enough.
-            // Some browsers allow requestPictureInPicture only inside the exact event handler stack.
-            // If await pipVideo.play() fails, we catch it.
-            await pipVideo.play();
+        }).catch(err => console.error(err));
+    } else {
+        // STRATEGY: 
+        // We catch play() errors but we chain PiP request immediately if safe.
+        // Even better: Some iOS versions work best if we just call requestPictureInPicture.
+        // But video must be playing.
 
-            // 5. Request PiP immediately after play
-            await pipVideo.requestPictureInPicture();
+        // Let's rely on the fact that we removed 'muted' and have an audio track.
+        const playPromise = pipVideo.play();
 
-            isPipActive = true;
-            updatePipLoop();
+        // Use .then() immediately to keep the microtask chain tight
+        if (playPromise !== undefined) {
+            playPromise
+                .then(() => {
+                    return pipVideo.requestPictureInPicture();
+                })
+                .then(() => {
+                    isPipActive = true;
+                    updatePipLoop();
+                })
+                .catch(error => {
+                    console.error("PiP/Play error:", error);
+                    showToast(`PiPエラー: ${error.message} (${error.name})`, 'error');
+                });
         }
-    } catch (err) {
-        console.error('PiP failed:', err);
-        showToast(`PiPエラー: ${err.message || err.name} (Code: ${err.code})`, 'error');
     }
 });
 
