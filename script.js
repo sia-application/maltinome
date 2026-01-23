@@ -542,6 +542,14 @@ function setupPip() {
 
     pipVideo.srcObject = finalStream;
     pipVideo.muted = false;
+
+    // START PLAYING IMMEDIATELY (On first interaction)
+    // This ensures the video is "playing" when we later request PiP
+    pipVideo.play().then(() => {
+        console.log("PiP video started playing in background");
+    }).catch(e => {
+        console.warn("PiP video auto-play failed (will retry on click)", e);
+    });
 }
 
 // Prepare PiP stream early (idempotent)
