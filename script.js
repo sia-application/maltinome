@@ -582,25 +582,13 @@ function updatePipLoop() {
     }
 }
 
-// PiP Button Handler
 // PiP Button Handler calls - strictly synchronous where possible
 pipBtn.addEventListener('click', () => {
-    // 1. Initialize AudioContext (Sync)
-    if (!audioContext) {
-        audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    }
-
-    // 2. Setup (Logic must run if not ready, but ideally prepared earlier)
+    // 1. Setup (Logic must run if not ready, but ideally prepared earlier)
     if (!pipCanvas) setupPip();
 
-    // 3. User Activation: iOS is extremely strict. 
-    // We must call video.play() AND requestPictureInPicture() in the same tick if possible.
-    // However, play() returns a promise.
-
-    // Resume audio context "in background"
-    if (audioContext.state === 'suspended') {
-        audioContext.resume().catch(() => { });
-    }
+    // NOTE: AudioContext resume is handled by global listeners now.
+    // We do NOT call it here to avoid consuming the user gesture.
 
     if (document.pictureInPictureElement) {
         document.exitPictureInPicture().then(() => {
