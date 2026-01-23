@@ -419,8 +419,16 @@ function playTone(time, freq, vol, type) {
     osc.frequency.value = freq;
     gain.gain.setValueAtTime(vol, time);
     gain.gain.exponentialRampToValueAtTime(0.001, time + 0.05);
+
+    // Connect to speakers
     osc.connect(gain);
     gain.connect(audioContext.destination);
+
+    // ALSO connect to PiP stream if active (this routes sound to background video)
+    if (pipAudioDestination) {
+        gain.connect(pipAudioDestination);
+    }
+
     osc.start(time);
     osc.stop(time + 0.05);
 }
@@ -493,8 +501,12 @@ addMetronome();
 // ==========================================
 // PiP (Picture-in-Picture) Support for Background Play
 // ==========================================
+// ==========================================
+// PiP (Picture-in-Picture) Support for Background Play
+// ==========================================
 let pipCanvas, pipCtx;
 let isPipActive = false;
+let pipAudioDestination = null; // Destination node to mix sound into PiP
 
 function setupPip() {
     // Create an off-screen canvas
@@ -523,9 +535,11 @@ function setupPip() {
     // Create silent audio track
     try {
         const dest = audioContext.createMediaStreamDestination();
+        pipAudioDestination = dest; // Store strictly for routing
+
         const osc = audioContext.createOscillator();
         const gain = audioContext.createGain();
-        gain.gain.value = 0; // Completely silent
+        gain.gain.value = 0.001; // Not completely silent, as that sometimes triggers "no audio" logic
         osc.connect(gain);
         gain.connect(dest);
         osc.start();
