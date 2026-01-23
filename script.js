@@ -591,40 +591,53 @@ function updatePipLoop() {
 }
 
 // PiP Button Handler calls - strictly synchronous where possible
+// PiP Button Handler calls - strictly synchronous
 pipBtn.addEventListener('click', () => {
     // 1. Setup (Logic must run if not ready, but ideally prepared earlier)
     if (!pipCanvas) setupPip();
 
     // NOTE: AudioContext resume is handled by global listeners now.
-    // We do NOT call it here to avoid consuming the user gesture.
 
     if (document.pictureInPictureElement) {
         document.exitPictureInPicture().then(() => {
             isPipActive = false;
         }).catch(err => console.error(err));
     } else {
-        // STRATEGY: 
-        // We catch play() errors but we chain PiP request immediately if safe.
-        // Even better: Some iOS versions work best if we just call requestPictureInPicture.
-        // But video must be playing.
+        // STRATEGY: "Optimistic Synchronous Call"
+        // We assume pipVideo.play() was called in 'preparePip/setupPip' on the first touch.
+        // We TRY to call requestPictureInPicture() immediately to satisfy the strictest User Activation.
 
-        // Let's rely on the fact that we removed 'muted' and have an audio track.
-        const playPromise = pipVideo.play();
+        try {
+            // Ensure it's not muted (just in case)
+            pipVideo.muted = false;
 
-        // Use .then() immediately to keep the microtask chain tight
-        if (playPromise !== undefined) {
-            playPromise
-                .then(() => {
-                    return pipVideo.requestPictureInPicture();
-                })
-                .then(() => {
+            // Just call it. If video isn't playing, it might throw InvalidStateError, 
+            // but if we await play(), we lose the token for NoAllowedError.
+            const pipPromise = pipVideo.requestPictureInPicture();
+
+            if (pipPromise) {
+                pipPromise.then(() => {
                     isPipActive = true;
                     updatePipLoop();
-                })
-                .catch(error => {
-                    console.error("PiP/Play error:", error);
-                    showToast(`PiPエラー: ${error.message} (${error.name})`, 'error');
+                }).catch(err => {
+                    // If it failed because "Video is not playing", WE ARE TRAPPED.
+                    // But let's try the fallback: play() then request.
+                    console.warn("Direct PiP failed (maybe not playing?), trying fallback", err);
+
+                    pipVideo.play().then(() => {
+                        return pipVideo.requestPictureInPicture();
+                    }).then(() => {
+                        isPipActive = true;
+                        updatePipLoop();
+                    }).catch(e2 => {
+                        console.error("Fallback PiP failed:", e2);
+                        showToast(`PiPエラー: ${e2.message} (${e2.name})`, 'error');
+                    });
                 });
+            }
+        } catch (syncErr) {
+            console.error("Sync PiP error:", syncErr);
+            showToast(`PiPエラー: ${syncErr.message}`, 'error');
         }
     }
 });
