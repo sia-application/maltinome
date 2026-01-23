@@ -507,14 +507,18 @@ function setupPip() {
     const canvasStream = pipCanvas.captureStream(10); // 10 FPS is enough
 
     // Create a combined stream with a silent audio track
-    // This is often required for PiP to work reliably on iOS
     const finalStream = new MediaStream();
 
     // Add video tracks
     canvasStream.getVideoTracks().forEach(track => finalStream.addTrack(track));
 
-    // Add silent audio track if audioContext is available
-    if (audioContext) {
+    // Force AudioContext initialization if not present
+    if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    }
+
+    // Create silent audio track
+    try {
         const dest = audioContext.createMediaStreamDestination();
         const osc = audioContext.createOscillator();
         const gain = audioContext.createGain();
@@ -526,11 +530,15 @@ function setupPip() {
         const audioTrack = dest.stream.getAudioTracks()[0];
         if (audioTrack) {
             finalStream.addTrack(audioTrack);
+        } else {
+            console.warn('No audio track generated from destination');
         }
+    } catch (e) {
+        console.error('Error creating silent audio track:', e);
     }
 
     pipVideo.srcObject = finalStream;
-    pipVideo.muted = false; // Important: must not be muted for "playback" to count
+    pipVideo.muted = false;
 }
 
 function drawPipCanvas() {
@@ -568,6 +576,15 @@ function updatePipLoop() {
 
 // PiP Button Handler
 pipBtn.addEventListener('click', async () => {
+    if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    }
+
+    // Ensure context is running (User Activation)
+    if (audioContext.state === 'suspended') {
+        await audioContext.resume();
+    }
+
     if (!pipCanvas) setupPip();
 
     try {
@@ -583,7 +600,7 @@ pipBtn.addEventListener('click', async () => {
         }
     } catch (err) {
         console.error('PiP failed:', err);
-        showToast('PiPの起動に失敗しました', 'error');
+        showToast(`PiPエラー: ${err.message || err.name}`, 'error');
     }
 });
 
