@@ -576,31 +576,40 @@ function updatePipLoop() {
 
 // PiP Button Handler
 pipBtn.addEventListener('click', async () => {
+    // 1. Initialize AudioContext if needed (Sync)
     if (!audioContext) {
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
     }
 
-    // Ensure context is running (User Activation)
-    if (audioContext.state === 'suspended') {
-        await audioContext.resume();
-    }
-
+    // 2. Setup Canvas/Video Stream (Sync)
     if (!pipCanvas) setupPip();
+
+    // 3. Resume AudioContext (Fire and Forget - DO NOT AWAIT)
+    // Awaiting here consumes the user activation token on strict browsers (iOS)
+    if (audioContext.state === 'suspended') {
+        audioContext.resume().catch(e => console.warn('Audio resume failed', e));
+    }
 
     try {
         if (document.pictureInPictureElement) {
             await document.exitPictureInPicture();
             isPipActive = false;
         } else {
-            // Need to play video first
+            // 4. Play video immediately
+            // We await play() because it returns a promise, but it's usually fast enough.
+            // Some browsers allow requestPictureInPicture only inside the exact event handler stack.
+            // If await pipVideo.play() fails, we catch it.
             await pipVideo.play();
+
+            // 5. Request PiP immediately after play
             await pipVideo.requestPictureInPicture();
+
             isPipActive = true;
             updatePipLoop();
         }
     } catch (err) {
         console.error('PiP failed:', err);
-        showToast(`PiPエラー: ${err.message || err.name}`, 'error');
+        showToast(`PiPエラー: ${err.message || err.name} (Code: ${err.code})`, 'error');
     }
 });
 
