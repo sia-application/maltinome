@@ -2,7 +2,8 @@
 let audioContext = null;
 let isPlaying = false;
 let metronomes = [];
-let schedulerTimer = null;
+// let schedulerTimer = null; // Replaced by Worker
+let timerWorker = null; // Web Worker instance
 let nextNoteTime = 0;
 let scheduleAheadTime = 0.1;
 let lookahead = 25;
@@ -291,7 +292,8 @@ class Metronome {
             btn.textContent = '■';
 
             // If global scheduler isn't running, start it
-            if (!schedulerTimer) {
+            // We check if "playing" flag is false to know if we need to start
+            if (!isPlaying) {
                 // Ensure audio context is ready
                 if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
                 if (audioContext.state === 'suspended') audioContext.resume();
@@ -321,18 +323,32 @@ class Metronome {
 
 
 // Global Scheduler State Management
+
+// Initialize Worker
+if (window.Worker) {
+    timerWorker = new Worker('worker.js');
+    timerWorker.onmessage = function (e) {
+        if (e.data === "tick") {
+            scheduler();
+        }
+    };
+} else {
+    console.warn('Web Workers are not supported in this browser.');
+}
+
 function startSchedulerLoop() {
-    if (!schedulerTimer) {
-        scheduler();
-        updateGlobalPlayState();
+    if (timerWorker) {
+        timerWorker.postMessage("start");
     }
+    updateGlobalPlayState();
 }
 
 function checkAutoStop() {
     const anyPlaying = metronomes.some(m => m.isPlaying);
     if (!anyPlaying) {
-        clearTimeout(schedulerTimer);
-        schedulerTimer = null;
+        if (timerWorker) {
+            timerWorker.postMessage("stop");
+        }
     }
 }
 
@@ -368,13 +384,6 @@ function scheduler() {
             advanceMetronomeNote(m);
         }
     });
-
-    // Continue loop if anyone is playing
-    if (metronomes.some(m => m.isPlaying)) {
-        schedulerTimer = setTimeout(scheduler, lookahead);
-    } else {
-        schedulerTimer = null;
-    }
 }
 
 function scheduleMetronomeNote(metronome, time) {
