@@ -53,6 +53,8 @@ document.addEventListener('click', unlockAudio);
 // DOM Elements
 const playBtn = document.getElementById('play-btn');
 const addMetronomeBtn = document.getElementById('add-metronome-btn');
+const pipBtn = document.getElementById('pip-btn');
+const pipVideo = document.getElementById('pip-video');
 const metronomesContainer = document.getElementById('metronomes-container');
 const metronomeTemplate = document.getElementById('metronome-template');
 
@@ -477,13 +479,96 @@ function addMetronome() {
 }
 
 // Init
-playBtn.addEventListener('click', togglePlay);
+playBtn.addEventListener('click', () => togglePlay());
 addMetronomeBtn.addEventListener('click', addMetronome);
 
 // Initialize presets on load (moved here appropriately or just keep distinct calls)
 // Add initial metronome
 // Add initial metronome
 addMetronome();
+
+// ==========================================
+// PiP (Picture-in-Picture) Support for Background Play
+// ==========================================
+let pipCanvas, pipCtx;
+let isPipActive = false;
+
+function setupPip() {
+    // Create an off-screen canvas
+    pipCanvas = document.createElement('canvas');
+    pipCanvas.width = 200;
+    pipCanvas.height = 200;
+    pipCtx = pipCanvas.getContext('2d');
+
+    // Draw initial state
+    drawPipCanvas();
+
+    // Capture stream from canvas
+    const stream = pipCanvas.captureStream(10); // 10 FPS is enough
+    pipVideo.srcObject = stream;
+}
+
+function drawPipCanvas() {
+    if (!pipCtx) return;
+
+    pipCtx.fillStyle = '#1a1a2e'; // Background
+    pipCtx.fillRect(0, 0, pipCanvas.width, pipCanvas.height);
+
+    pipCtx.fillStyle = '#ffffff';
+    pipCtx.font = 'bold 30px sans-serif';
+    pipCtx.textAlign = 'center';
+
+    // Display some info
+    const anyPlaying = metronomes.some(m => m.isPlaying);
+    const text = anyPlaying ? "PLAYING" : "PAUSED";
+    pipCtx.fillText("MALTINOME", 100, 80);
+    pipCtx.fillStyle = anyPlaying ? '#00ff88' : '#888888';
+    pipCtx.fillText(text, 100, 130);
+
+    // Simple beat indicator
+    if (anyPlaying && Math.floor(Date.now() / 500) % 2 === 0) {
+        pipCtx.beginPath();
+        pipCtx.arc(100, 160, 10, 0, Math.PI * 2);
+        pipCtx.fill();
+    }
+}
+
+// Function checking visibility/PiP status to keep updating canvas
+function updatePipLoop() {
+    if (isPipActive || document.pictureInPictureElement) {
+        drawPipCanvas();
+        requestAnimationFrame(updatePipLoop);
+    }
+}
+
+// PiP Button Handler
+pipBtn.addEventListener('click', async () => {
+    if (!pipCanvas) setupPip();
+
+    try {
+        if (document.pictureInPictureElement) {
+            await document.exitPictureInPicture();
+            isPipActive = false;
+        } else {
+            // Need to play video first
+            await pipVideo.play();
+            await pipVideo.requestPictureInPicture();
+            isPipActive = true;
+            updatePipLoop();
+        }
+    } catch (err) {
+        console.error('PiP failed:', err);
+        showToast('PiPの起動に失敗しました', 'error');
+    }
+});
+
+// Update canvas when play state changes
+const originalTogglePlay = togglePlay;
+togglePlay = async function () {
+    await originalTogglePlay();
+    // Force redraw
+    drawPipCanvas();
+};
 
 // ==========================================
 // Preset Management

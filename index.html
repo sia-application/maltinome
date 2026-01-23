@@ -57,7 +57,14 @@
                 <span class="play-icon">▶</span>
                 <span class="btn-text">スタート</span>
             </button>
-            <footer class="app-footer">made for SiA v1.1.4</footer>
+            <button class="pip-btn" id="pip-btn" title="バックグラウンド再生(PiP)">
+                📺 PiP
+            </button>
+
+            <!-- Hidden Video for PiP -->
+            <video id="pip-video" playsinline muted loop
+                style="width: 1px; height: 1px; opacity: 0; pointer-events: none; position: absolute;"></video>
+            <footer class="app-footer">made for SiA v1.1.4 (PiP)</footer>
         </main>
     </div>
 
