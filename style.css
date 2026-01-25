@@ -15,6 +15,7 @@
     --text-primary: #ffffff;
     --text-secondary: #a0a0a0;
     --beat-active: #00d2d3;
+    --beat-offbeat: #ffeaa7;
     --beat-inactive: rgba(255, 255, 255, 0.2);
 }
 
@@ -856,7 +857,8 @@ header h1 {
 .beat-dots {
     display: flex;
     justify-content: center;
-    gap: 20px;
+    gap: 12px;
+    align-items: center;
 }
 
 .beat-dots .dot {
@@ -865,6 +867,21 @@ header h1 {
     border-radius: 50%;
     background: var(--beat-inactive);
     transition: all 0.1s ease;
+}
+
+.beat-dots .offbeat-dot {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--beat-inactive);
+    transition: all 0.1s ease;
+}
+
+.beat-dots .offbeat-dot.active {
+    background: var(--beat-offbeat);
+    box-shadow: 0 0 10px var(--beat-offbeat);
+    transform: scale(1.2);
+    opacity: 1;
 }
 
 .beat-dots .dot.active {
@@ -1260,6 +1277,55 @@ header h1 {
     border-left: 4px solid #e74c3c;
 }
 
-.toast.info {
-    border-left: 4px solid var(--primary);
+
+/* Visual Mode Toggle */
+.visual-mode-section {
+    margin-bottom: 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+
+.visual-mode-section h2 {
+    display: none;
+}
+
+.visual-mode-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 12px 20px;
+    border: 2px solid var(--bg-glass);
+    border-radius: 50px;
+    background: var(--bg-glass);
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+    min-width: 160px;
+}
+
+.visual-mode-label {
+    color: var(--text-secondary);
+}
+
+.visual-mode-value {
+    color: var(--beat-active);
+    font-weight: 600;
+}
+
+.visual-mode-toggle:hover {
+    border-color: var(--secondary);
+    background: rgba(162, 155, 254, 0.1);
+}
+
+/* Visibility Control */
+.beat-dots.mode-main-only .offbeat-dot {
+    display: none;
+}
+
+.beat-dots.mode-offbeat-only .dot {
+    display: none;
 }

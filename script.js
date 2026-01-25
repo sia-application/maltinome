@@ -225,6 +225,44 @@ class Metronome {
             accToggle.classList.toggle('active', this.accentEnabled);
         });
 
+        // Visual Mode Toggle
+        this.visualMode = 'main'; // Default
+        const visToggle = el.querySelector('.visual-mode-toggle');
+        const visValue = el.querySelector('.visual-mode-value');
+        const visLabel = el.querySelector('.visual-mode-label');
+
+        if (visToggle) {
+            visToggle.addEventListener('click', (e) => {
+                e.preventDefault(); // Safety
+
+                // Cycle modes
+                if (this.visualMode === 'both') {
+                    this.visualMode = 'main';
+                } else if (this.visualMode === 'main') {
+                    this.visualMode = 'offbeat';
+                } else {
+                    this.visualMode = 'both';
+                }
+
+                visToggle.dataset.mode = this.visualMode;
+                this.updateBeatDots();
+
+                // Update Text
+                const textMap = {
+                    'main': '表拍のみ',
+                    'offbeat': '裏拍のみ',
+                    'both': '両方 (短)'
+                };
+
+                if (visValue) {
+                    visValue.textContent = textMap[this.visualMode];
+                } else if (visLabel) {
+                    // Fallback for cached HTML
+                    visLabel.textContent = `表示設定: ${textMap[this.visualMode]}`;
+                }
+            });
+        }
+
         // Initialize Dots
         this.updateBeatDots();
 
@@ -250,27 +288,65 @@ class Metronome {
         const container = this.element.querySelector('.beat-dots');
         const pattern = patterns[this.currentPattern];
         container.innerHTML = '';
+
+        // Apply current mode class
+        container.className = 'beat-dots'; // Reset
+        if (this.visualMode === 'main') container.classList.add('mode-main-only');
+        else if (this.visualMode === 'offbeat') container.classList.add('mode-offbeat-only');
+        else container.classList.add('mode-both');
+
         for (let i = 0; i < pattern.beats; i++) {
+            // Main beat dot
             const dot = document.createElement('span');
             dot.className = 'dot';
             if (pattern.notes[i] === 0) dot.style.opacity = '0.3';
             container.appendChild(dot);
+
+            // Offbeat dot
+            const offDot = document.createElement('span');
+            offDot.className = 'offbeat-dot';
+            container.appendChild(offDot);
         }
     }
 
-    visualizeBeat(beatNumber) {
+    visualizeBeat(beatNumber, duration) {
         const dots = this.element.querySelectorAll('.dot');
         dots.forEach((dot, i) => {
             dot.classList.remove('active', 'first');
             if (i === beatNumber) {
                 dot.classList.add('active');
                 if (i === 0) dot.classList.add('first');
+
+                // Auto turn off ONLY if mode is 'both'
+                if (this.visualMode === 'both') {
+                    setTimeout(() => {
+                        dot.classList.remove('active', 'first');
+                    }, duration);
+                }
+            }
+        });
+    }
+
+    visualizeOffbeat(beatNumber, duration) {
+        const offDots = this.element.querySelectorAll('.offbeat-dot');
+        offDots.forEach((dot, i) => {
+            dot.classList.remove('active');
+            if (i === beatNumber) {
+                dot.classList.add('active');
+
+                // Auto turn off ONLY if mode is 'both'
+                if (this.visualMode === 'both') {
+                    setTimeout(() => {
+                        dot.classList.remove('active');
+                    }, duration);
+                }
             }
         });
     }
 
     clearVisuals() {
         this.element.querySelectorAll('.dot').forEach(d => d.classList.remove('active', 'first'));
+        this.element.querySelectorAll('.offbeat-dot').forEach(d => d.classList.remove('active'));
     }
 
     toggle() {
@@ -373,13 +449,6 @@ function scheduleMetronomeNote(metronome, time) {
     const pattern = patterns[metronome.currentPattern];
     const beatNumber = metronome.currentBeat;
 
-    // Visuals
-    setTimeout(() => {
-        if (isPlaying) metronome.visualizeBeat(beatNumber);
-    }, (time - audioContext.currentTime) * 1000);
-
-    if (pattern.notes[beatNumber] === 0) return;
-
     // Durations
     let beatDuration = 60.0 / metronome.tempo; // Quarter
     if (metronome.currentPattern === 'sextuplet') beatDuration /= 6;
@@ -393,6 +462,21 @@ function scheduleMetronomeNote(metronome, time) {
 
     let mainStart = metronome.isOffbeat ? time + offset : time;
     let offStart = metronome.isOffbeat ? time : time + offset;
+
+    // Calculate visual duration (60% of half interval to ensure gap)
+    const visualDuration = (mainInterval / 2) * 1000 * 0.6;
+
+    // Main Visuals
+    setTimeout(() => {
+        if (isPlaying && metronome.isPlaying) metronome.visualizeBeat(beatNumber, visualDuration);
+    }, (mainStart - audioContext.currentTime) * 1000);
+
+    // Offbeat Visuals
+    setTimeout(() => {
+        if (isPlaying && metronome.isPlaying) metronome.visualizeOffbeat(beatNumber, visualDuration);
+    }, (offStart - audioContext.currentTime) * 1000);
+
+    if (pattern.notes[beatNumber] === 0) return;
 
     // Main Sounds
     if (metronome.volume > 0) {
@@ -564,7 +648,8 @@ function extractMetronomeState(metronome) {
         volume: metronome.volume,
         offbeatVolume: metronome.offbeatVolume,
         pitch: metronome.pitch,
-        isOffbeat: metronome.isOffbeat
+        isOffbeat: metronome.isOffbeat,
+        visualMode: metronome.visualMode
     };
 }
 
@@ -633,6 +718,30 @@ function applyMetronomeState(metronome, state) {
     // Offbeat toggle
     metronome.isOffbeat = state.isOffbeat || false;
     el.querySelector('.offbeat-toggle').classList.toggle('offbeat', metronome.isOffbeat);
+
+    // Visual Mode
+    metronome.visualMode = state.visualMode || 'main'; // Default to main
+    const visToggle = el.querySelector('.visual-mode-toggle');
+    const visValue = el.querySelector('.visual-mode-value');
+    const visLabel = el.querySelector('.visual-mode-label');
+
+    if (visToggle) {
+        visToggle.dataset.mode = metronome.visualMode;
+
+        const textMap = {
+            'main': '表拍のみ',
+            'offbeat': '裏拍のみ',
+            'both': '両方 (短)'
+        };
+
+        if (visValue) {
+            visValue.textContent = textMap[metronome.visualMode];
+        } else if (visLabel) {
+            visLabel.textContent = `表示設定: ${textMap[metronome.visualMode]}`;
+        }
+    }
+
+    metronome.updateBeatDots();
 }
 
 // Save current preset
