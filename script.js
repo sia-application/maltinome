@@ -117,13 +117,14 @@ class Metronome {
         const tempoSlider = el.querySelector('.tempo-slider');
         const updateTempo = (val) => {
             let v = parseInt(val);
-            if (isNaN(v)) v = 120;
+            if (isNaN(v)) v = this.tempo; // Revert to current if invalid
             v = Math.max(5, Math.min(999, v));
             this.tempo = v;
             tempoInput.value = v;
             tempoSlider.value = v;
         };
 
+        tempoInput.addEventListener('focus', (e) => e.target.value = '');
         tempoInput.addEventListener('change', (e) => updateTempo(e.target.value));
         tempoSlider.addEventListener('input', (e) => updateTempo(e.target.value));
         el.querySelector('.tempo-down').addEventListener('click', () => updateTempo(this.tempo - 1));
