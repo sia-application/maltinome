@@ -551,7 +551,13 @@ class Metronome {
         } else {
             result = 'MISS...';
             className += ' miss';
-            this.evaluationCounts.miss++;
+            // Increase miss count (if initialized)
+            if (this.evaluationCounts) this.evaluationCounts.miss++;
+        }
+
+        // Initialize if somehow missing
+        if (!this.evaluationCounts) {
+            this.evaluationCounts = { excellent: 0, great: 0, nice: 0, miss: 0 };
         }
 
         // Increment counts based on result
@@ -699,11 +705,15 @@ function scheduleMetronomeNote(metronome, time) {
     if (metronome.isPlaying) {
         // Main beat
         if (!metronome.mutedBeats.has(beatNumber) && pattern.notes[beatNumber] !== 0) {
-            metronome.addExpectedHit(mainStart, 'main');
+            for (let i = 0; i < metronome.clickMultiplier; i++) {
+                metronome.addExpectedHit(mainStart + i * mainInterval, 'main');
+            }
         }
         // Off beat
         if (!metronome.mutedOffbeats.has(beatNumber) && pattern.notes[beatNumber] !== 0) {
-            metronome.addExpectedHit(offStart, 'offbeat');
+            for (let i = 0; i < metronome.offbeatMultiplier; i++) {
+                metronome.addExpectedHit(offStart + i * offInterval, 'offbeat');
+            }
         }
     }
 
