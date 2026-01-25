@@ -83,6 +83,10 @@ class Metronome {
         this.mutedBeats = new Set(); // Store indices of muted beats
         this.mutedOffbeats = new Set(); // Store indices of muted offbeats
 
+        // Rhythm Practice State
+        this.practiceMode = 'main'; // main, offbeat, both
+        this.expectedHits = [];
+
         this.element = this.createUI();
         this.setupEventListeners();
     }
@@ -320,6 +324,55 @@ class Metronome {
         } else {
             console.error('Detail toggle elements not found');
         }
+
+        // Rhythm Practice Controls
+        const practiceToggle = el.querySelector('.rhythm-practice-toggle');
+        const practiceSettings = el.querySelector('.rhythm-practice-settings');
+        const practiceTap = el.querySelector('.practice-tap-area');
+        const resetBtn = el.querySelector('.evaluation-reset-btn');
+        const practiceModeBtns = el.querySelectorAll('.practice-mode-btn');
+
+        if (practiceToggle && practiceSettings) {
+            practiceToggle.addEventListener('click', (e) => {
+                e.preventDefault();
+                practiceSettings.classList.toggle('open');
+                const isOpen = practiceSettings.classList.contains('open');
+                practiceToggle.textContent = isOpen ? 'リズム練習 ▲' : 'リズム練習 ▼';
+            });
+        }
+
+        if (practiceTap) {
+            // Use touchstart for lower latency on mobile, mousedown for desktop
+            const handleTap = (e) => {
+                e.preventDefault(); // Prevent double firing
+                this.evaluateTap();
+                // Visual feedback
+                practiceTap.style.transform = 'scale(0.95)';
+                setTimeout(() => practiceTap.style.transform = '', 50);
+            };
+            practiceTap.addEventListener('touchstart', handleTap, { passive: false });
+            practiceTap.addEventListener('mousedown', handleTap);
+        }
+
+        if (resetBtn) {
+            resetBtn.addEventListener('click', () => {
+                const textEl = el.querySelector('.evaluation-text');
+                if (textEl) {
+                    textEl.textContent = '---';
+                    textEl.className = 'evaluation-text';
+                }
+            });
+        }
+
+        if (practiceModeBtns) {
+            practiceModeBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    practiceModeBtns.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    this.practiceMode = btn.dataset.mode;
+                });
+            });
+        }
     }
 
     updateBeatDots() {
@@ -421,6 +474,80 @@ class Metronome {
     clearVisuals() {
         this.element.querySelectorAll('.dot').forEach(d => d.classList.remove('active', 'first'));
         this.element.querySelectorAll('.offbeat-dot').forEach(d => d.classList.remove('active'));
+    }
+
+    addExpectedHit(time, type) {
+        // Keep only recent and future hits
+        const now = audioContext ? audioContext.currentTime : 0;
+
+        // Cleanup old hits (older than 1 sec)
+        if (this.expectedHits.length > 50 || (this.expectedHits.length > 0 && this.expectedHits[0].time < now - 1.0)) {
+            this.expectedHits = this.expectedHits.filter(h => h.time > now - 1.0);
+        }
+
+        this.expectedHits.push({ time, type });
+    }
+
+    evaluateTap() {
+        if (!audioContext || !this.isPlaying) return;
+
+        const now = audioContext.currentTime;
+
+        // Filter relevant hits based on mode
+        let relevantHits = this.expectedHits;
+        if (this.practiceMode === 'main') {
+            relevantHits = relevantHits.filter(h => h.type === 'main');
+        } else if (this.practiceMode === 'offbeat') {
+            relevantHits = relevantHits.filter(h => h.type === 'offbeat');
+        }
+        // 'both' uses all
+
+        if (relevantHits.length === 0) return;
+
+        // Find closest
+        let closest = null;
+        let minDiff = Infinity;
+
+        relevantHits.forEach(hit => {
+            const diff = Math.abs(hit.time - now);
+            if (diff < minDiff) {
+                minDiff = diff;
+                closest = hit;
+            }
+        });
+
+        if (closest) {
+            this.displayEvaluation(minDiff);
+        }
+    }
+
+    displayEvaluation(diff) {
+        const textEl = this.element.querySelector('.evaluation-text');
+        if (!textEl) return;
+
+        let result = '';
+        let className = 'evaluation-text';
+
+        // Windows (seconds)
+        if (diff <= 0.04) { // slightly loose for web audio latency variation
+            result = 'EXCELLENT!!';
+            className += ' excellent';
+        } else if (diff <= 0.08) {
+            result = 'GREAT!';
+            className += ' great';
+        } else if (diff <= 0.12) {
+            result = 'NICE';
+            className += ' nice';
+        } else {
+            result = 'MISS...';
+            className += ' miss';
+        }
+
+        // Re-trigger animation
+        textEl.classList.remove('excellent', 'great', 'nice', 'miss');
+        void textEl.offsetWidth; // Trigger reflow
+        textEl.textContent = result;
+        textEl.className = className;
     }
 
     toggle() {
@@ -539,6 +666,18 @@ function scheduleMetronomeNote(metronome, time) {
 
     // Calculate visual duration (60% of half interval to ensure gap)
     const visualDuration = (mainInterval / 2) * 1000 * 0.6;
+
+    // Record expected hits for practice
+    if (metronome.isPlaying) {
+        // Main beat
+        if (!metronome.mutedBeats.has(beatNumber) && pattern.notes[beatNumber] !== 0) {
+            metronome.addExpectedHit(mainStart, 'main');
+        }
+        // Off beat
+        if (!metronome.mutedOffbeats.has(beatNumber) && pattern.notes[beatNumber] !== 0) {
+            metronome.addExpectedHit(offStart, 'offbeat');
+        }
+    }
 
     // Main Visuals
     setTimeout(() => {
