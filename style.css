@@ -873,6 +873,31 @@ header h1 {
     border-radius: 50%;
     background: var(--beat-inactive);
     transition: all 0.1s ease;
+    cursor: pointer;
+    /* Enable clicking */
+}
+
+.beat-dots .dot.muted {
+    opacity: 0.3;
+    /* transform: scale(0.8); User requested same size */
+    background: transparent;
+    border: 2px solid var(--beat-inactive);
+    box-shadow: none !important;
+    /* Remove glow if active but muted */
+}
+
+/* Ensure active muted dot shows distinct state if needed, or just allow it to "flash" weakly */
+.beat-dots .dot.muted.active {
+    border-color: var(--beat-active);
+    background: rgba(0, 210, 211, 0.2);
+    transform: scale(1.0);
+    /* Slightly larger than muted inactive but smaller than full active */
+}
+
+/* Specific style for first beat muted */
+.beat-dots .dot.muted.first.active {
+    border-color: var(--accent);
+    background: rgba(253, 121, 168, 0.2);
 }
 
 .beat-dots .offbeat-dot {
@@ -881,6 +906,33 @@ header h1 {
     border-radius: 50%;
     background: var(--beat-inactive);
     transition: all 0.1s ease;
+    cursor: pointer;
+    /* Enable clicking */
+}
+
+.beat-dots .offbeat-dot.muted {
+    opacity: 0.3;
+    background: transparent;
+    border: 2px solid var(--beat-inactive);
+    box-shadow: none !important;
+}
+
+.beat-dots .offbeat-dot.muted.active {
+    border-color: var(--accent);
+    background: rgba(253, 121, 168, 0.2);
+    /* transform: scale(1.2); Keep scale logical if user wants native size, but offbeat active usually scales 1.2. 
+       User said "same size" for main beat. I'll defer scale change here or keep it consistent with active state minus the glow/solid color if muted. 
+       Let's keep the transform scale for active state if it's consistent with "not shrinking when muted". 
+       The main beat muted active had scale(1.0). Offbeat active usually has scale(1.2). 
+       If muted, let's keep it 1.0 or 1.2? Muted main beat stays 1.0 (original size). 
+       Offbeat active is 1.2. Muted offbeat active should probably be 1.0 (original size) or 1.2? 
+       User said "don't change size when OFF (muted)". 
+       So mute state should match non-muted state size? 
+       Non-muted active is 1.2. Muted active should probably be 1.2 to be "same size". 
+       But main beat muted active was set to 1.0 (original size) in previous step which matched "same size as inactive".
+       Wait, user said "オフにしたときの◯の大きさは同じにして" (Make circle size same when turned OFF).
+       This likely meant "don't shrink it to 0.8 like you did before".
+       So I will remove any shrink. */
 }
 
 .beat-dots .offbeat-dot.active {

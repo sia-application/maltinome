@@ -80,6 +80,8 @@ class Metronome {
         this.offbeatVolume = 0.0;
         this.pitch = 800; // Default pitch
         this.isPlaying = false; // Individual playing state
+        this.mutedBeats = new Set(); // Store indices of muted beats
+        this.mutedOffbeats = new Set(); // Store indices of muted offbeats
 
         this.element = this.createUI();
         this.setupEventListeners();
@@ -171,6 +173,8 @@ class Metronome {
                 btn.classList.add('active');
                 this.currentPattern = btn.dataset.pattern;
                 this.currentBeat = 0;
+                this.mutedBeats.clear(); // Reset mutes on pattern change
+                this.mutedOffbeats.clear();
                 this.updateBeatDots();
             });
         });
@@ -334,11 +338,47 @@ class Metronome {
             const dot = document.createElement('span');
             dot.className = 'dot';
             if (pattern.notes[i] === 0) dot.style.opacity = '0.3';
+
+            // Check if muted
+            if (this.mutedBeats.has(i)) {
+                dot.classList.add('muted');
+            }
+
+            // Click to toggle mute
+            dot.addEventListener('click', (e) => {
+                e.stopPropagation(); // Prevent bubbling if needed
+                if (this.mutedBeats.has(i)) {
+                    this.mutedBeats.delete(i);
+                    dot.classList.remove('muted');
+                } else {
+                    this.mutedBeats.add(i);
+                    dot.classList.add('muted');
+                }
+            });
+
             container.appendChild(dot);
 
             // Offbeat dot
             const offDot = document.createElement('span');
             offDot.className = 'offbeat-dot';
+
+            // Check if muted
+            if (this.mutedOffbeats.has(i)) {
+                offDot.classList.add('muted');
+            }
+
+            // Click to toggle mute
+            offDot.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (this.mutedOffbeats.has(i)) {
+                    this.mutedOffbeats.delete(i);
+                    offDot.classList.remove('muted');
+                } else {
+                    this.mutedOffbeats.add(i);
+                    offDot.classList.add('muted');
+                }
+            });
+
             container.appendChild(offDot);
         }
     }
@@ -514,17 +554,22 @@ function scheduleMetronomeNote(metronome, time) {
 
     // Main Sounds
     if (metronome.volume > 0) {
-        for (let i = 0; i < metronome.clickMultiplier; i++) {
-            playTone(mainStart + i * mainInterval,
-                (beatNumber === 0 && i === 0 && metronome.accentEnabled) ? metronome.pitch + 200 : metronome.pitch,
-                metronome.volume, 'square');
+        // Skip if this beat is muted
+        if (!metronome.mutedBeats.has(beatNumber)) {
+            for (let i = 0; i < metronome.clickMultiplier; i++) {
+                playTone(mainStart + i * mainInterval,
+                    (beatNumber === 0 && i === 0 && metronome.accentEnabled) ? metronome.pitch + 200 : metronome.pitch,
+                    metronome.volume, 'square');
+            }
         }
     }
 
     // Offbeat Sounds
     if (metronome.offbeatVolume > 0) {
-        for (let i = 0; i < metronome.offbeatMultiplier; i++) {
-            playTone(offStart + i * offInterval, 600, metronome.offbeatVolume, 'square');
+        if (!metronome.mutedOffbeats.has(beatNumber)) {
+            for (let i = 0; i < metronome.offbeatMultiplier; i++) {
+                playTone(offStart + i * offInterval, 600, metronome.offbeatVolume, 'square');
+            }
         }
     }
 }
