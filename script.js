@@ -656,10 +656,12 @@ addMetronome();
 // Preset Toggle
 const presetToggleBtn = document.getElementById('preset-toggle-btn');
 const presetSection = document.getElementById('preset-section');
+const presetContentBody = document.getElementById('preset-content-body');
 
-if (presetToggleBtn && presetSection) {
+if (presetToggleBtn && presetSection && presetContentBody) {
     presetToggleBtn.addEventListener('click', () => {
-        const isOpen = presetSection.classList.toggle('open');
+        const isOpen = presetContentBody.classList.toggle('open');
+        presetSection.classList.toggle('open', isOpen);
         presetToggleBtn.textContent = isOpen ? 'プリセット ▲' : 'プリセット ▼';
     });
 }

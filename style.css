@@ -1420,17 +1420,64 @@ header h1 {
     color: var(--bg-dark);
 }
 
-/* Preset Section */
+/* Preset Section - Unified Card */
 .preset-section {
     background: var(--bg-card);
     border-radius: 32px;
-    padding: 32px 24px;
+    padding: 0;
+    /* Remove padding from container, padding will be in content */
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3),
+        0 0 0 1px rgba(255, 255, 255, 0.08);
+    /* Initial shadow less intense */
+    backdrop-filter: blur(20px);
+    margin-bottom: 24px;
+    position: relative;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    overflow: hidden;
+}
+
+.preset-section.open {
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5),
         0 0 0 1px rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(20px);
-    margin-bottom: 30px;
-    /* Add spacing below spacing like metronome-unit */
-    position: relative;
+}
+
+/* Toggle Header (Integrated) */
+.preset-toggle-header {
+    width: 100%;
+    padding: 16px;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+    border-radius: 32px;
+    /* Match container */
+    font-weight: 600;
+}
+
+/* Hover effect removed */
+
+.preset-section.open .preset-toggle-header {
+    border-radius: 32px 32px 0 0;
+    /* flattened bottom when open */
+    /* color and background changes removed */
+}
+
+/* Content Body */
+.preset-content-body {
+    display: none;
+    padding: 0 24px 32px 24px;
+    /* Move padding here */
+    animation: slideDown 0.3s ease;
+}
+
+.preset-content-body.open {
+    display: block;
 }
 
 .preset-header {
