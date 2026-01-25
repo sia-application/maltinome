@@ -86,6 +86,12 @@ class Metronome {
         // Rhythm Practice State
         this.practiceMode = 'main'; // main, offbeat, both
         this.expectedHits = [];
+        this.evaluationCounts = {
+            excellent: 0,
+            great: 0,
+            nice: 0,
+            miss: 0
+        };
 
         this.element = this.createUI();
         this.setupEventListeners();
@@ -361,6 +367,10 @@ class Metronome {
                     textEl.textContent = '---';
                     textEl.className = 'evaluation-text';
                 }
+
+                // Reset counts
+                this.evaluationCounts = { excellent: 0, great: 0, nice: 0, miss: 0 };
+                this.updateCountDisplay();
             });
         }
 
@@ -541,13 +551,31 @@ class Metronome {
         } else {
             result = 'MISS...';
             className += ' miss';
+            this.evaluationCounts.miss++;
         }
+
+        // Increment counts based on result
+        if (result.includes('EXCELLENT')) this.evaluationCounts.excellent++;
+        else if (result.includes('GREAT')) this.evaluationCounts.great++;
+        else if (result.includes('NICE')) this.evaluationCounts.nice++;
+
+        this.updateCountDisplay();
 
         // Re-trigger animation
         textEl.classList.remove('excellent', 'great', 'nice', 'miss');
         void textEl.offsetWidth; // Trigger reflow
         textEl.textContent = result;
         textEl.className = className;
+    }
+
+    updateCountDisplay() {
+        const counts = this.element.querySelectorAll('.count-value');
+        counts.forEach(c => {
+            const type = c.dataset.type;
+            if (this.evaluationCounts[type] !== undefined) {
+                c.textContent = this.evaluationCounts[type];
+            }
+        });
     }
 
     toggle() {

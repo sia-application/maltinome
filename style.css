@@ -1915,3 +1915,50 @@ header h1 {
     background: linear-gradient(135deg, rgba(108, 92, 231, 0.2), rgba(253, 121, 168, 0.2));
     border-color: var(--primary);
 }
+
+/* Evaluation Counts */
+.evaluation-counts {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 12px;
+    width: 100%;
+}
+
+.count-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 6px 8px;
+    border-radius: 8px;
+    flex: 1;
+}
+
+.count-label {
+    font-size: 0.6rem;
+    font-weight: 600;
+    opacity: 0.8;
+}
+
+.count-value {
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.count-item.excellent .count-label,
+.count-item.excellent .count-value { color: #55efc4; }
+
+.count-item.great .count-label,
+.count-item.great .count-value { color: #74b9ff; }
+
+.count-item.nice .count-label,
+.count-item.nice .count-value { color: #ffeaa7; }
+
+.count-item.miss .count-label,
+.count-item.miss .count-value { color: #b2bec3; }
+
+.practice-display {
+    flex-direction: column;
+}
