@@ -12,13 +12,13 @@
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon.png">
     <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js')
-                    .then(reg => console.log('Service Worker registered', reg))
-                    .catch(err => console.error('Service Worker creation failed', err));
-            });
-        }
+        // if ('serviceWorker' in navigator) {
+        //     window.addEventListener('load', () => {
+        //         navigator.serviceWorker.register('./sw.js')
+        //             .then(reg => console.log('Service Worker registered', reg))
+        //             .catch(err => console.error('Service Worker creation failed', err));
+        //     });
+        // }
     </script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
@@ -58,7 +58,7 @@
                         <div class="preset-save-controls">
                             <div class="save-folder-container">
                                 <select id="save-folder-select" class="preset-select">
-                                    <option value="new">+ 新規フォルダ作成</option>
+                                    <option value="new">新規フォルダ作成</option>
                                 </select>
                                 <input type="text" id="new-folder-input" class="preset-name-input"
                                     placeholder="フォルダ名を入力..." maxlength="20">
@@ -147,9 +147,9 @@
                         <button class="practice-mode-btn" data-mode="offbeat">裏拍</button>
                         <button class="practice-mode-btn" data-mode="both">両拍</button>
                     </div>
-                    <button class="evaluation-reset-btn">評価リセット</button>
+                    <button class="evaluation-reset-btn">リセット</button>
                 </div>
-                <button class="practice-tap-area">TAP!</button>
+                <button class="practice-tap-area">TAP</button>
             </div>
 
             <button type="button" class="detail-toggle main-detail-toggle">詳細設定 ▼</button>
