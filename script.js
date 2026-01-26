@@ -218,9 +218,16 @@ class Metronome {
             muteBtn.classList.toggle('muted', this.volume === 0);
         };
 
+        volSlider.addEventListener('click', () => toggleStep(volSlider, false, 'volume', false));
         volSlider.addEventListener('input', (e) => updateVol(e.target.value));
-        muteBtn.addEventListener('click', () => updateVol(Math.max(0, parseInt(volSlider.value) - 10)));
-        el.querySelector('.main-volume-up').addEventListener('click', () => updateVol(Math.min(500, parseInt(volSlider.value) + 10)));
+        muteBtn.addEventListener('click', () => {
+            const step = this.volumeStep === 2 ? 100 : 10;
+            updateVol(Math.max(0, parseInt(volSlider.value) - step));
+        });
+        el.querySelector('.main-volume-up').addEventListener('click', () => {
+            const step = this.volumeStep === 2 ? 100 : 10;
+            updateVol(Math.min(500, parseInt(volSlider.value) + step));
+        });
 
         // Offbeat Volume
         const offSlider = el.querySelector('.detail-settings .offbeat-volume-slider');
@@ -235,9 +242,16 @@ class Metronome {
             offMuteBtn.classList.toggle('muted', this.offbeatVolume === 0);
         };
 
+        offSlider.addEventListener('click', () => toggleStep(offSlider, true, 'volume', false));
         offSlider.addEventListener('input', (e) => updateOffVol(e.target.value));
-        offMuteBtn.addEventListener('click', () => updateOffVol(Math.max(0, parseInt(offSlider.value) - 10)));
-        el.querySelector('.offbeat-volume-up').addEventListener('click', () => updateOffVol(Math.min(500, parseInt(offSlider.value) + 10)));
+        offMuteBtn.addEventListener('click', () => {
+            const step = this.offbeatVolumeStep === 2 ? 100 : 10;
+            updateOffVol(Math.max(0, parseInt(offSlider.value) - step));
+        });
+        el.querySelector('.offbeat-volume-up').addEventListener('click', () => {
+            const step = this.offbeatVolumeStep === 2 ? 100 : 10;
+            updateOffVol(Math.min(500, parseInt(offSlider.value) + step));
+        });
 
         // Multipliers
         const multBtns = el.querySelectorAll('.multiplier-btn');
@@ -398,25 +412,49 @@ class Metronome {
         this.offbeatPitchStep = 1; // Default for Offbeat
         this.practicePitchStep = 1; // Default for Practice Main
         this.practiceOffPitchStep = 1; // Default for Practice Offbeat
+        this.volumeStep = 1;
+        this.offbeatVolumeStep = 1;
+        this.practiceVolumeStep = 1;
+        this.practiceOffVolumeStep = 1;
 
         // Helper to toggle step
-        const toggleStep = (slider, isOff = false, isPractice = false) => {
+        const toggleStep = (slider, isOff = false, type = 'pitch', isPractice = false) => {
             let currentStep;
-            if (isPractice) {
-                if (isOff) {
-                    this.practiceOffPitchStep = this.practiceOffPitchStep === 1 ? 2 : 1;
-                    currentStep = this.practiceOffPitchStep;
+            if (type === 'pitch') {
+                if (isPractice) {
+                    if (isOff) {
+                        this.practiceOffPitchStep = this.practiceOffPitchStep === 1 ? 2 : 1;
+                        currentStep = this.practiceOffPitchStep;
+                    } else {
+                        this.practicePitchStep = this.practicePitchStep === 1 ? 2 : 1;
+                        currentStep = this.practicePitchStep;
+                    }
                 } else {
-                    this.practicePitchStep = this.practicePitchStep === 1 ? 2 : 1;
-                    currentStep = this.practicePitchStep;
+                    if (isOff) {
+                        this.offbeatPitchStep = this.offbeatPitchStep === 1 ? 2 : 1;
+                        currentStep = this.offbeatPitchStep;
+                    } else {
+                        this.pitchStep = this.pitchStep === 1 ? 2 : 1;
+                        currentStep = this.pitchStep;
+                    }
                 }
-            } else {
-                if (isOff) {
-                    this.offbeatPitchStep = this.offbeatPitchStep === 1 ? 2 : 1;
-                    currentStep = this.offbeatPitchStep;
+            } else { // Volume
+                if (isPractice) {
+                    if (isOff) {
+                        this.practiceOffVolumeStep = this.practiceOffVolumeStep === 1 ? 2 : 1;
+                        currentStep = this.practiceOffVolumeStep;
+                    } else {
+                        this.practiceVolumeStep = this.practiceVolumeStep === 1 ? 2 : 1;
+                        currentStep = this.practiceVolumeStep;
+                    }
                 } else {
-                    this.pitchStep = this.pitchStep === 1 ? 2 : 1;
-                    currentStep = this.pitchStep;
+                    if (isOff) {
+                        this.offbeatVolumeStep = this.offbeatVolumeStep === 1 ? 2 : 1;
+                        currentStep = this.offbeatVolumeStep;
+                    } else {
+                        this.volumeStep = this.volumeStep === 1 ? 2 : 1;
+                        currentStep = this.volumeStep;
+                    }
                 }
             }
             slider.classList.toggle('step-skip', currentStep === 2);
@@ -426,7 +464,7 @@ class Metronome {
             // Toggle step on click
             pitchSlider.addEventListener('click', (e) => {
                 // We let the default behavior happen (slider moves), then toggle mode
-                toggleStep(pitchSlider, false, false);
+                toggleStep(pitchSlider, false, 'pitch', false);
             });
 
             pitchSlider.addEventListener('input', (e) => {
@@ -505,7 +543,7 @@ class Metronome {
 
         if (offPitchSlider) {
             offPitchSlider.addEventListener('click', (e) => {
-                toggleStep(offPitchSlider, true, false);
+                toggleStep(offPitchSlider, true, 'pitch', false);
             });
 
             offPitchSlider.addEventListener('input', (e) => {
@@ -674,9 +712,16 @@ class Metronome {
                 pMuteBtn.textContent = this.practiceMainVol === 0 ? '🔇' : '🔈';
                 pMuteBtn.classList.toggle('muted', this.practiceMainVol === 0);
             };
+            pVolSlider.addEventListener('click', () => toggleStep(pVolSlider, false, 'volume', true));
             pVolSlider.addEventListener('input', (e) => updatePVol(e.target.value));
-            pMuteBtn.addEventListener('click', () => updatePVol(Math.max(0, parseInt(pVolSlider.value) - 10)));
-            el.querySelector('.practice-volume-up').addEventListener('click', () => updatePVol(Math.min(500, parseInt(pVolSlider.value) + 10)));
+            pMuteBtn.addEventListener('click', () => {
+                const step = this.practiceVolumeStep === 2 ? 100 : 10;
+                updatePVol(Math.max(0, parseInt(pVolSlider.value) - step));
+            });
+            el.querySelector('.practice-volume-up').addEventListener('click', () => {
+                const step = this.practiceVolumeStep === 2 ? 100 : 10;
+                updatePVol(Math.min(500, parseInt(pVolSlider.value) + step));
+            });
 
             // Offbeat Vol
             const pOffVolSlider = el.querySelector('.practice-off-volume-slider');
@@ -689,9 +734,16 @@ class Metronome {
                 pOffMuteBtn.textContent = this.practiceOffVol === 0 ? '🔇' : '🔈';
                 pOffMuteBtn.classList.toggle('muted', this.practiceOffVol === 0);
             };
+            pOffVolSlider.addEventListener('click', () => toggleStep(pOffVolSlider, true, 'volume', true));
             pOffVolSlider.addEventListener('input', (e) => updatePOffVol(e.target.value));
-            pOffMuteBtn.addEventListener('click', () => updatePOffVol(Math.max(0, parseInt(pOffVolSlider.value) - 10)));
-            el.querySelector('.practice-off-volume-up').addEventListener('click', () => updatePOffVol(Math.min(500, parseInt(pOffVolSlider.value) + 10)));
+            pOffMuteBtn.addEventListener('click', () => {
+                const step = this.practiceOffVolumeStep === 2 ? 100 : 10;
+                updatePOffVol(Math.max(0, parseInt(pOffVolSlider.value) - step));
+            });
+            el.querySelector('.practice-off-volume-up').addEventListener('click', () => {
+                const step = this.practiceOffVolumeStep === 2 ? 100 : 10;
+                updatePOffVol(Math.min(500, parseInt(pOffVolSlider.value) + step));
+            });
 
             // Main Pitch
             const pPitchSlider = el.querySelector('.practice-pitch-slider');
@@ -712,7 +764,7 @@ class Metronome {
                 }
             };
             pPitchSlider.addEventListener('click', (e) => {
-                toggleStep(pPitchSlider, false, true);
+                toggleStep(pPitchSlider, false, 'pitch', true);
             });
             pPitchSlider.addEventListener('input', (e) => {
                 updatePPitch(e.target.value);
@@ -787,7 +839,7 @@ class Metronome {
                 }
             };
             pOffPitchSlider.addEventListener('click', (e) => {
-                toggleStep(pOffPitchSlider, true, true);
+                toggleStep(pOffPitchSlider, true, 'pitch', true);
             });
             pOffPitchSlider.addEventListener('input', (e) => {
                 updatePOffPitch(e.target.value);

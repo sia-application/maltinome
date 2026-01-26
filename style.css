@@ -444,16 +444,24 @@ header h1 {
 .pitch-slider.step-skip,
 .offbeat-pitch-slider.step-skip,
 .practice-pitch-slider.step-skip,
-.practice-off-pitch-slider.step-skip {
-    background: linear-gradient(90deg, #e67e22, #d35400);
+.practice-off-pitch-slider.step-skip,
+.volume-slider.step-skip,
+.offbeat-volume-slider.step-skip,
+.practice-volume-slider.step-skip,
+.practice-off-volume-slider.step-skip {
+    background: linear-gradient(90deg, #e67e22, #d35400) !important;
 }
 
 .pitch-slider.step-skip::-webkit-slider-thumb,
 .offbeat-pitch-slider.step-skip::-webkit-slider-thumb,
 .practice-pitch-slider.step-skip::-webkit-slider-thumb,
-.practice-off-pitch-slider.step-skip::-webkit-slider-thumb {
-    background: linear-gradient(135deg, #e67e22, #d35400);
-    box-shadow: 0 4px 12px rgba(230, 126, 34, 0.4);
+.practice-off-pitch-slider.step-skip::-webkit-slider-thumb,
+.volume-slider.step-skip::-webkit-slider-thumb,
+.offbeat-volume-slider.step-skip::-webkit-slider-thumb,
+.practice-volume-slider.step-skip::-webkit-slider-thumb,
+.practice-off-volume-slider.step-skip::-webkit-slider-thumb {
+    background: linear-gradient(135deg, #e67e22, #d35400) !important;
+    box-shadow: 0 4px 12px rgba(230, 126, 34, 0.4) !important;
 }
 
 .pitch-slider::-webkit-slider-thumb,
