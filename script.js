@@ -867,14 +867,58 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
+// Initialize Firebase
 let db;
+let auth;
+let user = null;
+
 try {
     firebase.initializeApp(firebaseConfig);
     db = firebase.firestore();
+    auth = firebase.auth();
     console.log("Firebase initialized");
+
+    // Anonymous Sign-in
+    auth.signInAnonymously()
+        .then(() => {
+            console.log("Signed in anonymously");
+        })
+        .catch((error) => {
+            console.error("Anonymous sign-in failed:", error);
+            showToast('ログインに失敗しました', 'error');
+        });
+
+    auth.onAuthStateChanged((u) => {
+        if (u) {
+            user = u;
+            console.log("User is signed in:", user.uid);
+        } else {
+            user = null;
+            console.log("User is signed out");
+        }
+    });
+
 } catch (e) {
     console.error("Firebase initialization failed:", e);
-    // Fallback? Or just alert user.
+}
+
+// Auth Gatekeeper
+function ensureAuth() {
+    return new Promise((resolve, reject) => {
+        if (!auth) {
+            reject('Firebase Auth not initialized');
+            return;
+        }
+        if (auth.currentUser) {
+            resolve(auth.currentUser);
+            return;
+        }
+        const unsubscribe = auth.onAuthStateChanged(user => {
+            unsubscribe();
+            if (user) resolve(user);
+            else reject('User not signed in');
+        }, reject);
+    });
 }
 
 
@@ -924,6 +968,7 @@ function showToast(message, type = 'info') {
 async function getPresetData() {
     if (!db) return {};
     try {
+        await ensureAuth(); // Wait for auth
         const doc = await db.collection('appData').doc('presets').get();
         if (doc.exists) {
             return doc.data();
@@ -940,6 +985,7 @@ async function getPresetData() {
 async function savePresetData(data) {
     if (!db) return false;
     try {
+        await ensureAuth(); // Wait for auth
         await db.collection('appData').doc('presets').set(data);
         return true;
     } catch (e) {
@@ -1298,5 +1344,12 @@ newFolderInput.addEventListener('keypress', (e) => {
 
 
 // Initialize
-refreshFolderSelects();
+(async () => {
+    try {
+        // Wait a bit for auth initiation or just let refreshFolderSelects handle the await ensureAuth
+        await refreshFolderSelects();
+    } catch (e) {
+        console.error("Initial load failed:", e);
+    }
+})();
 
