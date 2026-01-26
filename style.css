@@ -2045,3 +2045,33 @@ header h1 {
 .practice-display {
     flex-direction: column;
 }
+
+/* Tuning Fork Button */
+.tuning-fork-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: none;
+    background: var(--bg-glass);
+    color: var(--text-primary);
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* margin-left: 8px; Removed as it's now in label row with flex gap */
+}
+
+.tuning-fork-btn:hover {
+    background: #0984e3;
+    /* Different color for distinction, maybe blue */
+    color: white;
+}
+
+.tuning-fork-btn.active {
+    background: #0984e3;
+    color: white;
+    box-shadow: 0 0 10px rgba(9, 132, 227, 0.5);
+    animation: pulse 1s infinite;
+}

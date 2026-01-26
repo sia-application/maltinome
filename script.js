@@ -91,6 +91,13 @@ class Metronome {
         this.practiceMainPitch = 800;
         this.practiceOffPitch = 600;
 
+        // Tuning Fork State
+        // Tuning Fork State
+        this.activeTuningForks = new Map(); // Key: Button Element, Value: { osc, gain }
+
+        this.expectedHits = [];
+
+
         this.expectedHits = [];
         this.evaluationCounts = {
             excellent: 0,
@@ -260,10 +267,71 @@ class Metronome {
             pitchDisplay.textContent = (Math.round(v * 1000) / 1000) + 'Hz';
         };
 
+        // Tuning Fork Helper
+        const handleTuningToggle = (freq, btn) => {
+            // Ensure context is running
+            if (audioContext.state === 'suspended') {
+                audioContext.resume();
+            }
+
+            // Check if this button is already playing
+            if (this.activeTuningForks.has(btn)) {
+                // Stop it
+                const { osc, gain } = this.activeTuningForks.get(btn);
+                osc.stop();
+                osc.disconnect();
+                gain.disconnect();
+                this.activeTuningForks.delete(btn);
+                btn.classList.remove('active');
+            } else {
+                // Start new tone
+                btn.classList.add('active');
+
+                const osc = audioContext.createOscillator();
+                const gain = audioContext.createGain();
+
+                osc.type = 'sine';
+                osc.frequency.value = freq;
+
+                // Gentle attack
+                gain.gain.setValueAtTime(0, audioContext.currentTime);
+                gain.gain.linearRampToValueAtTime(0.5, audioContext.currentTime + 0.1);
+
+                osc.connect(gain);
+                gain.connect(audioContext.destination);
+                osc.start();
+
+                this.activeTuningForks.set(btn, { osc, gain });
+            }
+        };
+
         if (pitchSlider) {
-            pitchSlider.addEventListener('input', (e) => updatePitch(e.target.value));
-            el.querySelector('.pitch-down').addEventListener('click', () => updatePitch(this.pitch - 50));
-            el.querySelector('.pitch-up').addEventListener('click', () => updatePitch(this.pitch + 50));
+            pitchSlider.addEventListener('input', (e) => {
+                updatePitch(e.target.value);
+                // Update frequency if currently playing this fork
+                const btn = el.querySelector('.pitch-fork-btn');
+                if (btn && this.activeTuningForks.has(btn)) {
+                    this.activeTuningForks.get(btn).osc.frequency.setValueAtTime(this.pitch, audioContext.currentTime);
+                }
+            });
+            el.querySelector('.pitch-down').addEventListener('click', () => {
+                updatePitch(this.pitch - 50);
+                if (this.tuningForkOsc && this.currentTuningBtn === el.querySelector('.pitch-fork-btn')) {
+                    this.tuningForkOsc.frequency.setValueAtTime(this.pitch, audioContext.currentTime);
+                }
+            });
+            el.querySelector('.pitch-up').addEventListener('click', () => {
+                updatePitch(this.pitch + 50);
+                if (this.tuningForkOsc && this.currentTuningBtn === el.querySelector('.pitch-fork-btn')) {
+                    this.tuningForkOsc.frequency.setValueAtTime(this.pitch, audioContext.currentTime);
+                }
+            });
+
+            // Tuning Fork Button
+            const pitchForkBtn = el.querySelector('.pitch-fork-btn');
+            if (pitchForkBtn) {
+                pitchForkBtn.addEventListener('click', () => handleTuningToggle(this.pitch, pitchForkBtn));
+            }
         }
 
         // Offbeat Pitch Control
@@ -279,9 +347,33 @@ class Metronome {
         };
 
         if (offPitchSlider) {
-            offPitchSlider.addEventListener('input', (e) => updateOffbeatPitch(e.target.value));
-            el.querySelector('.offbeat-pitch-down').addEventListener('click', () => updateOffbeatPitch(this.offbeatPitch - 50));
-            el.querySelector('.offbeat-pitch-up').addEventListener('click', () => updateOffbeatPitch(this.offbeatPitch + 50));
+            offPitchSlider.addEventListener('input', (e) => {
+                updateOffbeatPitch(e.target.value);
+                const btn = el.querySelector('.offbeat-fork-btn');
+                if (btn && this.activeTuningForks.has(btn)) {
+                    this.activeTuningForks.get(btn).osc.frequency.setValueAtTime(this.offbeatPitch, audioContext.currentTime);
+                }
+            });
+            el.querySelector('.offbeat-pitch-down').addEventListener('click', () => {
+                updateOffbeatPitch(this.offbeatPitch - 50);
+                const btn = el.querySelector('.offbeat-fork-btn');
+                if (btn && this.activeTuningForks.has(btn)) {
+                    this.activeTuningForks.get(btn).osc.frequency.setValueAtTime(this.offbeatPitch, audioContext.currentTime);
+                }
+            });
+            el.querySelector('.offbeat-pitch-up').addEventListener('click', () => {
+                updateOffbeatPitch(this.offbeatPitch + 50);
+                const btn = el.querySelector('.offbeat-fork-btn');
+                if (btn && this.activeTuningForks.has(btn)) {
+                    this.activeTuningForks.get(btn).osc.frequency.setValueAtTime(this.offbeatPitch, audioContext.currentTime);
+                }
+            });
+
+            // Tuning Fork Button
+            const offbeatForkBtn = el.querySelector('.offbeat-fork-btn');
+            if (offbeatForkBtn) {
+                offbeatForkBtn.addEventListener('click', () => handleTuningToggle(this.offbeatPitch, offbeatForkBtn));
+            }
         }
 
         // Toggles
@@ -424,9 +516,33 @@ class Metronome {
                 pPitchSlider.value = v;
                 pPitchDisplay.textContent = (Math.round(v * 1000) / 1000) + 'Hz';
             };
-            pPitchSlider.addEventListener('input', (e) => updatePPitch(e.target.value));
-            el.querySelector('.practice-pitch-down').addEventListener('click', () => updatePPitch(this.practiceMainPitch - 50));
-            el.querySelector('.practice-pitch-up').addEventListener('click', () => updatePPitch(this.practiceMainPitch + 50));
+            pPitchSlider.addEventListener('input', (e) => {
+                updatePPitch(e.target.value);
+                const btn = el.querySelector('.practice-pitch-fork-btn');
+                if (btn && this.activeTuningForks.has(btn)) {
+                    this.activeTuningForks.get(btn).osc.frequency.setValueAtTime(this.practiceMainPitch, audioContext.currentTime);
+                }
+            });
+            el.querySelector('.practice-pitch-down').addEventListener('click', () => {
+                updatePPitch(this.practiceMainPitch - 50);
+                const btn = el.querySelector('.practice-pitch-fork-btn');
+                if (btn && this.activeTuningForks.has(btn)) {
+                    this.activeTuningForks.get(btn).osc.frequency.setValueAtTime(this.practiceMainPitch, audioContext.currentTime);
+                }
+            });
+            el.querySelector('.practice-pitch-up').addEventListener('click', () => {
+                updatePPitch(this.practiceMainPitch + 50);
+                const btn = el.querySelector('.practice-pitch-fork-btn');
+                if (btn && this.activeTuningForks.has(btn)) {
+                    this.activeTuningForks.get(btn).osc.frequency.setValueAtTime(this.practiceMainPitch, audioContext.currentTime);
+                }
+            });
+
+            // Tuning Fork Button
+            const practicePitchForkBtn = el.querySelector('.practice-pitch-fork-btn');
+            if (practicePitchForkBtn) {
+                practicePitchForkBtn.addEventListener('click', () => handleTuningToggle(this.practiceMainPitch, practicePitchForkBtn));
+            }
 
             // Offbeat Pitch
             const pOffPitchSlider = el.querySelector('.practice-off-pitch-slider');
@@ -438,9 +554,33 @@ class Metronome {
                 pOffPitchSlider.value = v;
                 pOffPitchDisplay.textContent = (Math.round(v * 1000) / 1000) + 'Hz';
             };
-            pOffPitchSlider.addEventListener('input', (e) => updatePOffPitch(e.target.value));
-            el.querySelector('.practice-off-pitch-down').addEventListener('click', () => updatePOffPitch(this.practiceOffPitch - 50));
-            el.querySelector('.practice-off-pitch-up').addEventListener('click', () => updatePOffPitch(this.practiceOffPitch + 50));
+            pOffPitchSlider.addEventListener('input', (e) => {
+                updatePOffPitch(e.target.value);
+                const btn = el.querySelector('.practice-off-fork-btn');
+                if (btn && this.activeTuningForks.has(btn)) {
+                    this.activeTuningForks.get(btn).osc.frequency.setValueAtTime(this.practiceOffPitch, audioContext.currentTime);
+                }
+            });
+            el.querySelector('.practice-off-pitch-down').addEventListener('click', () => {
+                updatePOffPitch(this.practiceOffPitch - 50);
+                const btn = el.querySelector('.practice-off-fork-btn');
+                if (btn && this.activeTuningForks.has(btn)) {
+                    this.activeTuningForks.get(btn).osc.frequency.setValueAtTime(this.practiceOffPitch, audioContext.currentTime);
+                }
+            });
+            el.querySelector('.practice-off-pitch-up').addEventListener('click', () => {
+                updatePOffPitch(this.practiceOffPitch + 50);
+                const btn = el.querySelector('.practice-off-fork-btn');
+                if (btn && this.activeTuningForks.has(btn)) {
+                    this.activeTuningForks.get(btn).osc.frequency.setValueAtTime(this.practiceOffPitch, audioContext.currentTime);
+                }
+            });
+
+            // Tuning Fork Button
+            const practiceOffForkBtn = el.querySelector('.practice-off-fork-btn');
+            if (practiceOffForkBtn) {
+                practiceOffForkBtn.addEventListener('click', () => handleTuningToggle(this.practiceOffPitch, practiceOffForkBtn));
+            }
         }
 
         if (practiceTap) {
@@ -903,6 +1043,7 @@ function playTone(time, freq, vol, type) {
     osc.start(time);
     osc.stop(time + 0.05);
 }
+
 
 function advanceMetronomeNote(metronome) {
     const pattern = patterns[metronome.currentPattern];
