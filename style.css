@@ -253,7 +253,7 @@ header h1 {
 .volume-display {
     font-size: 1rem;
     font-weight: 600;
-    color: var(--accent);
+    color: #1abc9c;
 }
 
 .volume-control {
@@ -316,83 +316,12 @@ header h1 {
     height: 8px;
     -webkit-appearance: none;
     appearance: none;
-    background: linear-gradient(90deg, var(--secondary), var(--accent));
+    background: linear-gradient(90deg, #1abc9c, #16a085);
     border-radius: 4px;
     outline: none;
 }
 
 .volume-slider::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, var(--accent), #e84393);
-    cursor: pointer;
-    box-shadow: 0 4px 12px rgba(253, 121, 168, 0.4);
-    transition: transform 0.2s ease;
-}
-
-.volume-slider::-webkit-slider-thumb:hover {
-    transform: scale(1.2);
-}
-
-/* Offbeat Volume Slider */
-.offbeat-volume .offbeat-volume-slider {
-    background: linear-gradient(90deg, #f39c12, #e67e22);
-}
-
-.offbeat-volume .offbeat-volume-display {
-    color: #f39c12;
-}
-
-.offbeat-volume-slider {
-    flex: 1;
-    height: 8px;
-    -webkit-appearance: none;
-    appearance: none;
-    background: linear-gradient(90deg, #f39c12, #e67e22);
-    border-radius: 4px;
-    outline: none;
-}
-
-.offbeat-volume-slider::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #f39c12, #e67e22);
-    cursor: pointer;
-    box-shadow: 0 4px 12px rgba(243, 156, 18, 0.4);
-    transition: transform 0.2s ease;
-}
-
-.offbeat-volume-slider::-webkit-slider-thumb:hover {
-    transform: scale(1.2);
-}
-
-/* Pitch Control Section */
-.pitch-section .pitch-slider {
-    background: linear-gradient(90deg, #1abc9c, #16a085);
-}
-
-.pitch-section .pitch-display {
-    color: #1abc9c;
-    font-weight: 600;
-}
-
-.pitch-slider {
-    flex: 1;
-    height: 8px;
-    -webkit-appearance: none;
-    appearance: none;
-    background: linear-gradient(90deg, #1abc9c, #16a085);
-    border-radius: 4px;
-    outline: none;
-}
-
-.pitch-slider::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
     width: 24px;
@@ -404,7 +333,83 @@ header h1 {
     transition: transform 0.2s ease;
 }
 
-.pitch-slider::-webkit-slider-thumb:hover {
+.volume-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+}
+
+/* Offbeat Volume Slider */
+.offbeat-volume .offbeat-volume-slider {
+    background: linear-gradient(90deg, #1abc9c, #16a085);
+}
+
+.offbeat-volume .offbeat-volume-display {
+    color: #1abc9c;
+}
+
+.offbeat-volume-slider {
+    flex: 1;
+    height: 8px;
+    -webkit-appearance: none;
+    appearance: none;
+    background: linear-gradient(90deg, #1abc9c, #16a085);
+    border-radius: 4px;
+    outline: none;
+}
+
+.offbeat-volume-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #1abc9c, #16a085);
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(26, 188, 156, 0.4);
+    transition: transform 0.2s ease;
+}
+
+.offbeat-volume-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+}
+
+/* Pitch Control Section */
+.pitch-section .pitch-slider,
+.offbeat-pitch-section .offbeat-pitch-slider {
+    background: linear-gradient(90deg, #1abc9c, #16a085);
+}
+
+.pitch-section .pitch-display,
+.offbeat-pitch-section .offbeat-pitch-display {
+    color: #1abc9c;
+    font-weight: 600;
+}
+
+.pitch-slider,
+.offbeat-pitch-slider {
+    flex: 1;
+    height: 8px;
+    -webkit-appearance: none;
+    appearance: none;
+    background: linear-gradient(90deg, #1abc9c, #16a085);
+    border-radius: 4px;
+    outline: none;
+}
+
+.pitch-slider::-webkit-slider-thumb,
+.offbeat-pitch-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #1abc9c, #16a085);
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(26, 188, 156, 0.4);
+    transition: transform 0.2s ease;
+}
+
+.pitch-slider::-webkit-slider-thumb:hover,
+.offbeat-pitch-slider::-webkit-slider-thumb:hover {
     transform: scale(1.2);
 }
 
@@ -612,10 +617,10 @@ header h1 {
 }
 
 .offbeat-mult-btn.active {
-    border-color: #f39c12;
-    background: rgba(243, 156, 18, 0.2);
-    color: #f39c12;
-    box-shadow: 0 0 15px rgba(243, 156, 18, 0.3);
+    border-color: #00d2d3;
+    background: rgba(0, 210, 211, 0.2);
+    color: #00d2d3;
+    box-shadow: 0 0 15px rgba(0, 210, 211, 0.3);
 }
 
 /* Offbeat Toggle */
@@ -729,8 +734,8 @@ header h1 {
 }
 
 .accent-toggle.active {
-    border-color: #e74c3c;
-    background: rgba(231, 76, 60, 0.15);
+    border-color: #00d2d3;
+    background: rgba(0, 210, 211, 0.15);
 }
 
 .accent-icon {
@@ -749,7 +754,7 @@ header h1 {
 }
 
 .accent-toggle.active .accent-label {
-    color: #e74c3c;
+    color: #00d2d3;
 }
 
 .accent-switch {
@@ -774,8 +779,8 @@ header h1 {
 
 .accent-toggle.active .accent-slider {
     left: 18px;
-    background: linear-gradient(135deg, #e74c3c, #c0392b);
-    box-shadow: 0 2px 8px rgba(231, 76, 60, 0.4);
+    background: linear-gradient(135deg, #00d2d3, #00a8a8);
+    box-shadow: 0 2px 8px rgba(0, 210, 211, 0.4);
 }
 
 /* Subdivision Sound Toggle */

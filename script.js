@@ -79,6 +79,7 @@ class Metronome {
         this.volume = 1.0;
         this.offbeatVolume = 0.0;
         this.pitch = 800; // Default pitch
+        this.offbeatPitch = 600; // Default offbeat pitch
         this.isPlaying = false; // Individual playing state
         this.mutedBeats = new Set(); // Store indices of muted beats
         this.mutedOffbeats = new Set(); // Store indices of muted offbeats
@@ -258,6 +259,24 @@ class Metronome {
             pitchSlider.addEventListener('input', (e) => updatePitch(e.target.value));
             el.querySelector('.pitch-down').addEventListener('click', () => updatePitch(this.pitch - 50));
             el.querySelector('.pitch-up').addEventListener('click', () => updatePitch(this.pitch + 50));
+        }
+
+        // Offbeat Pitch Control
+        const offPitchSlider = el.querySelector('.offbeat-pitch-slider');
+        const offPitchDisplay = el.querySelector('.offbeat-pitch-display');
+
+        const updateOffbeatPitch = (val) => {
+            let v = parseInt(val);
+            v = Math.max(200, Math.min(2000, v));
+            this.offbeatPitch = v;
+            offPitchSlider.value = v;
+            offPitchDisplay.textContent = v + 'Hz';
+        };
+
+        if (offPitchSlider) {
+            offPitchSlider.addEventListener('input', (e) => updateOffbeatPitch(e.target.value));
+            el.querySelector('.offbeat-pitch-down').addEventListener('click', () => updateOffbeatPitch(this.offbeatPitch - 50));
+            el.querySelector('.offbeat-pitch-up').addEventListener('click', () => updateOffbeatPitch(this.offbeatPitch + 50));
         }
 
         // Toggles
@@ -762,7 +781,7 @@ function scheduleMetronomeNote(metronome, time) {
     if (metronome.offbeatVolume > 0) {
         if (!metronome.mutedOffbeats.has(beatNumber)) {
             for (let i = 0; i < metronome.offbeatMultiplier; i++) {
-                playTone(offStart + i * offInterval, 600, metronome.offbeatVolume, 'square');
+                playTone(offStart + i * offInterval, metronome.offbeatPitch, metronome.offbeatVolume, 'square');
             }
         }
     }
