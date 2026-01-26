@@ -317,6 +317,32 @@ class Metronome {
             return Math.round(newFreq * 1000) / 1000;
         };
 
+        const getNextSmartPitch = (currentFreq, direction) => {
+            const noteNum = 12 * (Math.log(currentFreq / 440) / Math.log(2)) + 69;
+            let currentNote = Math.round(noteNum);
+
+            // Define naturals (white keys) in one octave starting from C=0
+            // 0=C, 1=C#, 2=D, 3=D#, 4=E, 5=F, 6=F#, 7=G, 8=G#, 9=A, 10=A#, 11=B
+            const naturals = new Set([0, 2, 4, 5, 7, 9, 11]);
+
+            // Determine current type
+            const isNatural = naturals.has(currentNote % 12);
+
+            let nextNote = currentNote + direction;
+            let limit = 20; // Safety break
+            while (limit > 0) {
+                const type = naturals.has(nextNote % 12);
+                if (type === isNatural) {
+                    break;
+                }
+                nextNote += direction;
+                limit--;
+            }
+
+            const newFreq = 440 * Math.pow(2, (nextNote - 69) / 12);
+            return Math.round(newFreq * 1000) / 1000;
+        };
+
         // Tuning Fork Helper
         const handleTuningToggle = (freq, btn) => {
             // Ensure context is running
@@ -367,7 +393,41 @@ class Metronome {
             }
         };
 
+        this.pitchStep = 1; // Default semitone step for Main
+        this.offbeatPitchStep = 1; // Default for Offbeat
+        this.practicePitchStep = 1; // Default for Practice Main
+        this.practiceOffPitchStep = 1; // Default for Practice Offbeat
+
+        // Helper to toggle step
+        const toggleStep = (slider, isOff = false, isPractice = false) => {
+            let currentStep;
+            if (isPractice) {
+                if (isOff) {
+                    this.practiceOffPitchStep = this.practiceOffPitchStep === 1 ? 2 : 1;
+                    currentStep = this.practiceOffPitchStep;
+                } else {
+                    this.practicePitchStep = this.practicePitchStep === 1 ? 2 : 1;
+                    currentStep = this.practicePitchStep;
+                }
+            } else {
+                if (isOff) {
+                    this.offbeatPitchStep = this.offbeatPitchStep === 1 ? 2 : 1;
+                    currentStep = this.offbeatPitchStep;
+                } else {
+                    this.pitchStep = this.pitchStep === 1 ? 2 : 1;
+                    currentStep = this.pitchStep;
+                }
+            }
+            slider.classList.toggle('step-skip', currentStep === 2);
+        };
+
         if (pitchSlider) {
+            // Toggle step on click
+            pitchSlider.addEventListener('click', (e) => {
+                // We let the default behavior happen (slider moves), then toggle mode
+                toggleStep(pitchSlider, false, false);
+            });
+
             pitchSlider.addEventListener('input', (e) => {
                 updatePitch(e.target.value);
                 // Update frequency if currently playing this fork
@@ -377,14 +437,24 @@ class Metronome {
                 }
             });
             el.querySelector('.pitch-down').addEventListener('click', () => {
-                const newFreq = getSemitoneStep(this.pitch, -1);
+                let newFreq;
+                if (this.pitchStep === 2) {
+                    newFreq = getNextSmartPitch(this.pitch, -1);
+                } else {
+                    newFreq = getSemitoneStep(this.pitch, -1);
+                }
                 updatePitch(newFreq);
                 if (this.activeTuningForks.has(el.querySelector('.pitch-fork-btn'))) {
                     this.activeTuningForks.get(el.querySelector('.pitch-fork-btn')).osc.frequency.setValueAtTime(this.pitch, audioContext.currentTime);
                 }
             });
             el.querySelector('.pitch-up').addEventListener('click', () => {
-                const newFreq = getSemitoneStep(this.pitch, 1);
+                let newFreq;
+                if (this.pitchStep === 2) {
+                    newFreq = getNextSmartPitch(this.pitch, 1);
+                } else {
+                    newFreq = getSemitoneStep(this.pitch, 1);
+                }
                 updatePitch(newFreq);
                 if (this.activeTuningForks.has(el.querySelector('.pitch-fork-btn'))) {
                     this.activeTuningForks.get(el.querySelector('.pitch-fork-btn')).osc.frequency.setValueAtTime(this.pitch, audioContext.currentTime);
@@ -433,6 +503,10 @@ class Metronome {
         };
 
         if (offPitchSlider) {
+            offPitchSlider.addEventListener('click', (e) => {
+                toggleStep(offPitchSlider, true, false);
+            });
+
             offPitchSlider.addEventListener('input', (e) => {
                 updateOffbeatPitch(e.target.value);
                 const btn = el.querySelector('.offbeat-fork-btn');
@@ -441,7 +515,12 @@ class Metronome {
                 }
             });
             el.querySelector('.offbeat-pitch-down').addEventListener('click', () => {
-                const newFreq = getSemitoneStep(this.offbeatPitch, -1);
+                let newFreq;
+                if (this.offbeatPitchStep === 2) {
+                    newFreq = getNextSmartPitch(this.offbeatPitch, -1);
+                } else {
+                    newFreq = getSemitoneStep(this.offbeatPitch, -1);
+                }
                 updateOffbeatPitch(newFreq);
                 const btn = el.querySelector('.offbeat-fork-btn');
                 if (btn && this.activeTuningForks.has(btn)) {
@@ -449,7 +528,12 @@ class Metronome {
                 }
             });
             el.querySelector('.offbeat-pitch-up').addEventListener('click', () => {
-                const newFreq = getSemitoneStep(this.offbeatPitch, 1);
+                let newFreq;
+                if (this.offbeatPitchStep === 2) {
+                    newFreq = getNextSmartPitch(this.offbeatPitch, 1);
+                } else {
+                    newFreq = getSemitoneStep(this.offbeatPitch, 1);
+                }
                 updateOffbeatPitch(newFreq);
                 const btn = el.querySelector('.offbeat-fork-btn');
                 if (btn && this.activeTuningForks.has(btn)) {
@@ -626,6 +710,9 @@ class Metronome {
                     pPitchNoteDisplay.textContent = getNoteName(v);
                 }
             };
+            pPitchSlider.addEventListener('click', (e) => {
+                toggleStep(pPitchSlider, false, true);
+            });
             pPitchSlider.addEventListener('input', (e) => {
                 updatePPitch(e.target.value);
                 const btn = el.querySelector('.practice-pitch-fork-btn');
@@ -634,7 +721,12 @@ class Metronome {
                 }
             });
             el.querySelector('.practice-pitch-down').addEventListener('click', () => {
-                const newFreq = getSemitoneStep(this.practiceMainPitch, -1);
+                let newFreq;
+                if (this.practicePitchStep === 2) {
+                    newFreq = getNextSmartPitch(this.practiceMainPitch, -1);
+                } else {
+                    newFreq = getSemitoneStep(this.practiceMainPitch, -1);
+                }
                 updatePPitch(newFreq);
                 const btn = el.querySelector('.practice-pitch-fork-btn');
                 if (btn && this.activeTuningForks.has(btn)) {
@@ -642,7 +734,12 @@ class Metronome {
                 }
             });
             el.querySelector('.practice-pitch-up').addEventListener('click', () => {
-                const newFreq = getSemitoneStep(this.practiceMainPitch, 1);
+                let newFreq;
+                if (this.practicePitchStep === 2) {
+                    newFreq = getNextSmartPitch(this.practiceMainPitch, 1);
+                } else {
+                    newFreq = getSemitoneStep(this.practiceMainPitch, 1);
+                }
                 updatePPitch(newFreq);
                 const btn = el.querySelector('.practice-pitch-fork-btn');
                 if (btn && this.activeTuningForks.has(btn)) {
@@ -688,6 +785,9 @@ class Metronome {
                     pOffPitchNoteDisplay.textContent = getNoteName(v);
                 }
             };
+            pOffPitchSlider.addEventListener('click', (e) => {
+                toggleStep(pOffPitchSlider, true, true);
+            });
             pOffPitchSlider.addEventListener('input', (e) => {
                 updatePOffPitch(e.target.value);
                 const btn = el.querySelector('.practice-off-fork-btn');
@@ -696,7 +796,12 @@ class Metronome {
                 }
             });
             el.querySelector('.practice-off-pitch-down').addEventListener('click', () => {
-                const newFreq = getSemitoneStep(this.practiceOffPitch, -1);
+                let newFreq;
+                if (this.practiceOffPitchStep === 2) {
+                    newFreq = getNextSmartPitch(this.practiceOffPitch, -1);
+                } else {
+                    newFreq = getSemitoneStep(this.practiceOffPitch, -1);
+                }
                 updatePOffPitch(newFreq);
                 const btn = el.querySelector('.practice-off-fork-btn');
                 if (btn && this.activeTuningForks.has(btn)) {
@@ -704,7 +809,12 @@ class Metronome {
                 }
             });
             el.querySelector('.practice-off-pitch-up').addEventListener('click', () => {
-                const newFreq = getSemitoneStep(this.practiceOffPitch, 1);
+                let newFreq;
+                if (this.practiceOffPitchStep === 2) {
+                    newFreq = getNextSmartPitch(this.practiceOffPitch, 1);
+                } else {
+                    newFreq = getSemitoneStep(this.practiceOffPitch, 1);
+                }
                 updatePOffPitch(newFreq);
                 const btn = el.querySelector('.practice-off-fork-btn');
                 if (btn && this.activeTuningForks.has(btn)) {
