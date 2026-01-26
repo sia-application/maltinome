@@ -78,8 +78,8 @@ class Metronome {
         this.accentEnabled = true;
         this.volume = 1.0;
         this.offbeatVolume = 0.0;
-        this.pitch = 800; // Default pitch
-        this.offbeatPitch = 600; // Default offbeat pitch
+        this.pitch = 783.991; // Default pitch
+        this.offbeatPitch = 587.330; // Default offbeat pitch
         this.isPlaying = false; // Individual playing state
         this.mutedBeats = new Set(); // Store indices of muted beats
         this.mutedOffbeats = new Set(); // Store indices of muted offbeats
@@ -88,8 +88,8 @@ class Metronome {
         this.practiceMode = 'main'; // main, offbeat, both
         this.practiceMainVol = 1.0;
         this.practiceOffVol = 1.0;
-        this.practiceMainPitch = 800;
-        this.practiceOffPitch = 600;
+        this.practiceMainPitch = 783.991;
+        this.practiceOffPitch = 587.330;
 
         // Tuning Fork State
         // Tuning Fork State
@@ -324,11 +324,23 @@ class Metronome {
 
             // Check if this button is already playing
             if (this.activeTuningForks.has(btn)) {
-                // Stop it
+                // Stop it with a short fade-out to avoid noise
                 const { osc, gain } = this.activeTuningForks.get(btn);
-                osc.stop();
-                osc.disconnect();
-                gain.disconnect();
+                const now = audioContext.currentTime;
+                const fadeTime = 0.1;
+
+                gain.gain.cancelScheduledValues(now);
+                gain.gain.setValueAtTime(gain.gain.value, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + fadeTime);
+
+                osc.stop(now + fadeTime);
+
+                // Cleanup
+                osc.onended = () => {
+                    osc.disconnect();
+                    gain.disconnect();
+                };
+
                 this.activeTuningForks.delete(btn);
                 btn.classList.remove('active');
             } else {
@@ -717,7 +729,19 @@ class Metronome {
             if (practiceOffForkBtn) {
                 practiceOffForkBtn.addEventListener('click', () => handleTuningToggle(this.practiceOffPitch, practiceOffForkBtn));
             }
+
+            // Initialize Practice displays
+            updatePVol(Math.round(this.practiceMainVol * 100));
+            updatePOffVol(Math.round(this.practiceOffVol * 100));
+            updatePPitch(this.practiceMainPitch);
+            updatePOffPitch(this.practiceOffPitch);
         }
+
+        // Initialize Main displays
+        updatePitch(this.pitch);
+        updateOffbeatPitch(this.offbeatPitch);
+        updateVol(Math.round(this.volume * 100));
+        updateOffVol(Math.round(this.offbeatVolume * 100));
 
         if (practiceTap) {
             // Use touchstart for lower latency on mobile, mousedown for desktop
