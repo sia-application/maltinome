@@ -122,6 +122,10 @@
             <div class="rhythm-practice-settings">
                 <div class="practice-display">
                     <span class="evaluation-text">---</span>
+                    <div class="combo-display">
+                        <span class="combo-count">0</span>
+                        <span class="combo-label">COMBO</span>
+                    </div>
                     <div class="evaluation-counts">
                         <div class="count-item excellent">
                             <span class="count-label">EXCELLENT</span>
@@ -223,6 +227,13 @@
                                 max="5000" value="587.330" step="0.001">
                             <button class="pitch-btn practice-off-pitch-up" title="半音上げる">+</button>
                         </div>
+                    </div>
+                    <div class="volume-section combo-settings-section">
+                        <h2>コンボ判定</h2>
+                        <button type="button" class="visual-mode-toggle" id="combo-mode-toggle">
+                            <span class="visual-mode-label" style="display:none">コンボ判定</span>
+                            <span class="visual-mode-value">EXCELLENT+GREAT+NICE</span>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -391,7 +402,7 @@
 
                 <!-- Visual Mode Toggle -->
                 <div class="visual-mode-section">
-                    <button type="button" class="visual-mode-toggle" data-mode="main">
+                    <button type="button" class="visual-mode-toggle" id="impact-visual-toggle" data-mode="main">
                         <span class="visual-mode-label">インパクト表示</span>
                         <span class="visual-mode-value">表拍のみ</span>
                     </button>

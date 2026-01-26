@@ -105,6 +105,8 @@ class Metronome {
             nice: 0,
             miss: 0
         };
+        this.comboCount = 0;
+        this.comboMode = 'all'; // all, exc_great, exc_only, off
 
         this.element = this.createUI();
         this.setupEventListeners();
@@ -492,9 +494,9 @@ class Metronome {
 
         // Visual Mode Toggle
         this.visualMode = 'main'; // Default
-        const visToggle = el.querySelector('.visual-mode-toggle');
-        const visValue = el.querySelector('.visual-mode-value');
-        const visLabel = el.querySelector('.visual-mode-label');
+        const visToggle = el.querySelector('#impact-visual-toggle');
+        const visValue = visToggle ? visToggle.querySelector('.visual-mode-value') : null;
+        const visLabel = visToggle ? visToggle.querySelector('.visual-mode-label') : null;
 
         if (visToggle) {
             visToggle.addEventListener('click', (e) => {
@@ -735,6 +737,40 @@ class Metronome {
             updatePOffVol(Math.round(this.practiceOffVol * 100));
             updatePPitch(this.practiceMainPitch);
             updatePOffPitch(this.practiceOffPitch);
+            updatePPitch(this.practiceMainPitch);
+            updatePOffPitch(this.practiceOffPitch);
+
+            // Combo Mode
+            // Combo Mode
+            const comboToggle = el.querySelector('#combo-mode-toggle');
+            const comboValue = comboToggle ? comboToggle.querySelector('.visual-mode-value') : null;
+
+            if (comboToggle && comboValue) {
+                // Initial Text Update
+                const updateComboText = (mode) => {
+                    const textMap = {
+                        'all': 'EXCELLENT+GREAT+NICE',
+                        'exc_great': 'EXCELLENT+GREAT',
+                        'exc_only': 'EXCELLENT',
+                        'off': '表示しない'
+                    };
+                    comboValue.textContent = textMap[mode];
+                };
+                updateComboText(this.comboMode);
+
+                comboToggle.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    // Cycle modes: all -> exc_great -> exc_only -> off
+                    if (this.comboMode === 'all') this.comboMode = 'exc_great';
+                    else if (this.comboMode === 'exc_great') this.comboMode = 'exc_only';
+                    else if (this.comboMode === 'exc_only') this.comboMode = 'off';
+                    else this.comboMode = 'all';
+
+                    this.comboCount = 0; // Reset
+                    updateComboText(this.comboMode);
+                    this.updateComboDisplay();
+                });
+            }
         }
 
         // Initialize Main displays
@@ -804,7 +840,9 @@ class Metronome {
 
                 // Reset counts
                 this.evaluationCounts = { excellent: 0, great: 0, nice: 0, miss: 0 };
+                this.comboCount = 0;
                 this.updateCountDisplay();
+                this.updateComboDisplay();
             });
         }
 
@@ -993,6 +1031,7 @@ class Metronome {
             className += ' miss';
             // Increase miss count (if initialized)
             if (this.evaluationCounts) this.evaluationCounts.miss++;
+            this.comboCount = 0;
         }
 
         // Initialize if somehow missing
@@ -1001,11 +1040,48 @@ class Metronome {
         }
 
         // Increment counts based on result
+        let shouldIncrementCombo = false;
+
+        if (this.comboMode !== 'off') {
+            if (this.comboMode === 'all') {
+                if (result.includes('EXCELLENT') || result.includes('GREAT') || result.includes('NICE')) {
+                    shouldIncrementCombo = true;
+                }
+            } else if (this.comboMode === 'exc_great') {
+                if (result.includes('EXCELLENT') || result.includes('GREAT')) {
+                    shouldIncrementCombo = true;
+                } else if (result.includes('NICE')) {
+                    this.comboCount = 0; // Reset on Nice in strict modes? Usually yes, or just don't increment. 
+                    // User request implies strictness. Let's assume strict reset for lower grades if they break the "combo" definition.
+                    // Actually, usually in rhythm games, if it's not a combo hits, it breaks the combo.
+                    // So if mode is Exc+Great, getting a Nice should probably reset it.
+                    this.comboCount = 0;
+                }
+            } else if (this.comboMode === 'exc_only') {
+                if (result.includes('EXCELLENT')) {
+                    shouldIncrementCombo = true;
+                } else if (result.includes('GREAT') || result.includes('NICE')) {
+                    this.comboCount = 0;
+                }
+            }
+        }
+
         if (result.includes('EXCELLENT')) this.evaluationCounts.excellent++;
         else if (result.includes('GREAT')) this.evaluationCounts.great++;
         else if (result.includes('NICE')) this.evaluationCounts.nice++;
 
+        if (shouldIncrementCombo) {
+            this.comboCount++;
+        }
+
         this.updateCountDisplay();
+        if (this.comboMode !== 'off') {
+            this.updateComboDisplay();
+        } else {
+            // Ensure hidden
+            const comboEl = this.element.querySelector('.combo-display');
+            if (comboEl) comboEl.classList.remove('active');
+        }
 
         // Re-trigger animation
         textEl.classList.remove('excellent', 'great', 'nice', 'miss');
@@ -1022,6 +1098,25 @@ class Metronome {
                 c.textContent = this.evaluationCounts[type];
             }
         });
+    }
+
+    updateComboDisplay() {
+        const comboEl = this.element.querySelector('.combo-display');
+        const countEl = this.element.querySelector('.combo-count');
+
+        if (comboEl && countEl) {
+            if (this.comboCount > 1) {
+                comboEl.classList.add('active');
+                countEl.textContent = this.comboCount;
+
+                // Pop animation
+                comboEl.classList.remove('pop');
+                void comboEl.offsetWidth; // trigger reflow
+                comboEl.classList.add('pop');
+            } else {
+                comboEl.classList.remove('active');
+            }
+        }
     }
 
     toggle() {
