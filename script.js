@@ -221,25 +221,12 @@ class Metronome {
             muteBtn.classList.toggle('muted', this.volume === 0);
         };
 
-        const setupSliderToggle = (slider, isOff = false, type = 'pitch', isPractice = false) => {
-            let startVal = null;
 
-            const onStart = (e) => {
-                startVal = e.target.value;
-            };
 
-            slider.addEventListener('mousedown', onStart);
-            slider.addEventListener('touchstart', onStart, { passive: true });
-
-            slider.addEventListener('click', (e) => {
-                // Only toggle if value hasn't changed
-                if (startVal === e.target.value) {
-                    toggleStep(slider, isOff, type, isPractice);
-                }
-            });
-        };
-
-        setupSliderToggle(volSlider, false, 'volume', false);
+        const volStepBtn = el.querySelector('.vol-step-btn');
+        if (volStepBtn) {
+            volStepBtn.addEventListener('click', () => toggleStep(volSlider, false, 'volume', false));
+        }
         volSlider.addEventListener('input', (e) => updateVol(e.target.value));
         if (volInput) {
             volInput.addEventListener('input', (e) => updateVol(e.target.value, true));
@@ -270,7 +257,12 @@ class Metronome {
             offMuteBtn.classList.toggle('muted', this.offbeatVolume === 0);
         };
 
-        setupSliderToggle(offSlider, true, 'volume', false);
+
+
+        const offVolStepBtn = el.querySelector('.offbeat-vol-step-btn');
+        if (offVolStepBtn) {
+            offVolStepBtn.addEventListener('click', () => toggleStep(offSlider, true, 'volume', false));
+        }
         offSlider.addEventListener('input', (e) => updateOffVol(e.target.value));
         if (offInput) {
             offInput.addEventListener('input', (e) => updateOffVol(e.target.value, true));
@@ -452,8 +444,11 @@ class Metronome {
         // Helper to toggle step
         const toggleStep = (slider, isOff = false, type = 'pitch', isPractice = false) => {
             let currentStep;
+            let btn = null;
+
             if (type === 'pitch') {
                 if (isPractice) {
+                    btn = isOff ? this.element.querySelector('.practice-off-pitch-step-btn') : this.element.querySelector('.practice-pitch-step-btn');
                     if (isOff) {
                         this.practiceOffPitchStep = this.practiceOffPitchStep === 1 ? 2 : 1;
                         currentStep = this.practiceOffPitchStep;
@@ -462,6 +457,7 @@ class Metronome {
                         currentStep = this.practicePitchStep;
                     }
                 } else {
+                    btn = isOff ? this.element.querySelector('.offbeat-pitch-step-btn') : this.element.querySelector('.pitch-step-btn');
                     if (isOff) {
                         this.offbeatPitchStep = this.offbeatPitchStep === 1 ? 2 : 1;
                         currentStep = this.offbeatPitchStep;
@@ -472,6 +468,7 @@ class Metronome {
                 }
             } else { // Volume
                 if (isPractice) {
+                    btn = isOff ? this.element.querySelector('.practice-off-vol-step-btn') : this.element.querySelector('.practice-vol-step-btn');
                     if (isOff) {
                         this.practiceOffVolumeStep = this.practiceOffVolumeStep === 1 ? 2 : 1;
                         currentStep = this.practiceOffVolumeStep;
@@ -480,6 +477,7 @@ class Metronome {
                         currentStep = this.practiceVolumeStep;
                     }
                 } else {
+                    btn = isOff ? this.element.querySelector('.offbeat-vol-step-btn') : this.element.querySelector('.vol-step-btn');
                     if (isOff) {
                         this.offbeatVolumeStep = this.offbeatVolumeStep === 1 ? 2 : 1;
                         currentStep = this.offbeatVolumeStep;
@@ -490,11 +488,15 @@ class Metronome {
                 }
             }
             slider.classList.toggle('step-skip', currentStep === 2);
+            if (btn) btn.classList.toggle('active', currentStep === 2);
         };
 
         if (pitchSlider) {
-            // Toggle step on click
-            setupSliderToggle(pitchSlider, false, 'pitch', false);
+            // Pitch Step Toggle Button
+            const pitchStepBtn = el.querySelector('.pitch-step-btn');
+            if (pitchStepBtn) {
+                pitchStepBtn.addEventListener('click', () => toggleStep(pitchSlider, false, 'pitch', false));
+            }
 
             pitchSlider.addEventListener('input', (e) => {
                 updatePitch(e.target.value);
@@ -571,7 +573,11 @@ class Metronome {
         };
 
         if (offPitchSlider) {
-            setupSliderToggle(offPitchSlider, true, 'pitch', false);
+            // Offbeat Pitch Step Toggle Button
+            const offPitchStepBtn = el.querySelector('.offbeat-pitch-step-btn');
+            if (offPitchStepBtn) {
+                offPitchStepBtn.addEventListener('click', () => toggleStep(offPitchSlider, true, 'pitch', false));
+            }
 
             offPitchSlider.addEventListener('input', (e) => {
                 updateOffbeatPitch(e.target.value);
@@ -742,7 +748,11 @@ class Metronome {
                 pMuteBtn.textContent = this.practiceMainVol === 0 ? '🔇' : '🔈';
                 pMuteBtn.classList.toggle('muted', this.practiceMainVol === 0);
             };
-            setupSliderToggle(pVolSlider, false, 'volume', true);
+
+            const pVolStepBtn = el.querySelector('.practice-vol-step-btn');
+            if (pVolStepBtn) {
+                pVolStepBtn.addEventListener('click', () => toggleStep(pVolSlider, false, 'volume', true));
+            }
             pVolSlider.addEventListener('input', (e) => updatePVol(e.target.value));
             if (pVolInput) {
                 pVolInput.addEventListener('input', (e) => updatePVol(e.target.value, true));
@@ -771,7 +781,11 @@ class Metronome {
                 pOffMuteBtn.textContent = this.practiceOffVol === 0 ? '🔇' : '🔈';
                 pOffMuteBtn.classList.toggle('muted', this.practiceOffVol === 0);
             };
-            setupSliderToggle(pOffVolSlider, true, 'volume', true);
+
+            const pOffVolStepBtn = el.querySelector('.practice-off-vol-step-btn');
+            if (pOffVolStepBtn) {
+                pOffVolStepBtn.addEventListener('click', () => toggleStep(pOffVolSlider, true, 'volume', true));
+            }
             pOffVolSlider.addEventListener('input', (e) => updatePOffVol(e.target.value));
             if (pOffVolInput) {
                 pOffVolInput.addEventListener('input', (e) => updatePOffVol(e.target.value, true));
@@ -804,7 +818,10 @@ class Metronome {
                     pPitchNoteDisplay.textContent = getNoteName(v);
                 }
             };
-            setupSliderToggle(pPitchSlider, false, 'pitch', true);
+            const pPitchStepBtn = el.querySelector('.practice-pitch-step-btn');
+            if (pPitchStepBtn) {
+                pPitchStepBtn.addEventListener('click', () => toggleStep(pPitchSlider, false, 'pitch', true));
+            }
             pPitchSlider.addEventListener('input', (e) => {
                 updatePPitch(e.target.value);
                 const btn = el.querySelector('.practice-pitch-fork-btn');
@@ -877,7 +894,10 @@ class Metronome {
                     pOffPitchNoteDisplay.textContent = getNoteName(v);
                 }
             };
-            setupSliderToggle(pOffPitchSlider, true, 'pitch', true);
+            const pOffPitchStepBtn = el.querySelector('.practice-off-pitch-step-btn');
+            if (pOffPitchStepBtn) {
+                pOffPitchStepBtn.addEventListener('click', () => toggleStep(pOffPitchSlider, true, 'pitch', true));
+            }
             pOffPitchSlider.addEventListener('input', (e) => {
                 updatePOffPitch(e.target.value);
                 const btn = el.querySelector('.practice-off-fork-btn');
