@@ -253,11 +253,11 @@ class Metronome {
         const pitchDisplay = el.querySelector('.pitch-display');
 
         const updatePitch = (val) => {
-            let v = parseInt(val);
-            v = Math.max(200, Math.min(2000, v));
+            let v = parseFloat(val);
+            v = Math.max(200, Math.min(5000, v));
             this.pitch = v;
             pitchSlider.value = v;
-            pitchDisplay.textContent = v + 'Hz';
+            pitchDisplay.textContent = (Math.round(v * 1000) / 1000) + 'Hz';
         };
 
         if (pitchSlider) {
@@ -271,11 +271,11 @@ class Metronome {
         const offPitchDisplay = el.querySelector('.offbeat-pitch-display');
 
         const updateOffbeatPitch = (val) => {
-            let v = parseInt(val);
-            v = Math.max(200, Math.min(2000, v));
+            let v = parseFloat(val);
+            v = Math.max(200, Math.min(5000, v));
             this.offbeatPitch = v;
             offPitchSlider.value = v;
-            offPitchDisplay.textContent = v + 'Hz';
+            offPitchDisplay.textContent = (Math.round(v * 1000) / 1000) + 'Hz';
         };
 
         if (offPitchSlider) {
@@ -418,11 +418,11 @@ class Metronome {
             const pPitchSlider = el.querySelector('.practice-pitch-slider');
             const pPitchDisplay = el.querySelector('.practice-pitch-display');
             const updatePPitch = (val) => {
-                let v = parseInt(val);
-                v = Math.max(200, Math.min(2000, v));
+                let v = parseFloat(val);
+                v = Math.max(200, Math.min(5000, v));
                 this.practiceMainPitch = v;
                 pPitchSlider.value = v;
-                pPitchDisplay.textContent = v + 'Hz';
+                pPitchDisplay.textContent = (Math.round(v * 1000) / 1000) + 'Hz';
             };
             pPitchSlider.addEventListener('input', (e) => updatePPitch(e.target.value));
             el.querySelector('.practice-pitch-down').addEventListener('click', () => updatePPitch(this.practiceMainPitch - 50));
@@ -432,11 +432,11 @@ class Metronome {
             const pOffPitchSlider = el.querySelector('.practice-off-pitch-slider');
             const pOffPitchDisplay = el.querySelector('.practice-off-pitch-display');
             const updatePOffPitch = (val) => {
-                let v = parseInt(val);
-                v = Math.max(200, Math.min(2000, v));
+                let v = parseFloat(val);
+                v = Math.max(200, Math.min(5000, v));
                 this.practiceOffPitch = v;
                 pOffPitchSlider.value = v;
-                pOffPitchDisplay.textContent = v + 'Hz';
+                pOffPitchDisplay.textContent = (Math.round(v * 1000) / 1000) + 'Hz';
             };
             pOffPitchSlider.addEventListener('input', (e) => updatePOffPitch(e.target.value));
             el.querySelector('.practice-off-pitch-down').addEventListener('click', () => updatePOffPitch(this.practiceOffPitch - 50));
