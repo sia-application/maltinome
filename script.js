@@ -1092,7 +1092,7 @@ class Metronome {
         const now = audioContext.currentTime;
 
         // Filter relevant hits based on mode
-        let relevantHits = this.expectedHits.filter(h => !h.tapped); // Only untapped
+        let relevantHits = this.expectedHits.filter(h => !h.tapped || (h.timedOut && (now - h.time < 0.4))); // Allow claiming timed out hits within 0.4s
         if (this.practiceMode === 'main') {
             relevantHits = relevantHits.filter(h => h.type === 'main');
         } else if (this.practiceMode === 'offbeat') {
@@ -1116,6 +1116,7 @@ class Metronome {
 
         if (closest) {
             closest.tapped = true; // Mark as processed
+            closest.timedOut = false; // Consume the timeout flag
             this.displayEvaluation(minDiff);
         }
     }
@@ -1248,9 +1249,10 @@ class Metronome {
             else if (this.practiceMode === 'both') relevant = true;
 
             if (relevant) {
-                if (now - hit.time > 0.20) {
+                if (now - hit.time > 0.16) {
                     // Missed!
                     hit.tapped = true; // Mark as handled so we don't process it again
+                    hit.timedOut = true; // Mark as timed out so explicit late taps can claim it
 
                     // Silent Miss - Do NOT reset combo, just clear evaluation text
 
