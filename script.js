@@ -973,7 +973,7 @@ class Metronome {
             this.expectedHits = this.expectedHits.filter(h => h.time > now - 1.0);
         }
 
-        this.expectedHits.push({ time, type });
+        this.expectedHits.push({ time, type, tapped: false });
     }
 
     evaluateTap() {
@@ -982,7 +982,7 @@ class Metronome {
         const now = audioContext.currentTime;
 
         // Filter relevant hits based on mode
-        let relevantHits = this.expectedHits;
+        let relevantHits = this.expectedHits.filter(h => !h.tapped); // Only untapped
         if (this.practiceMode === 'main') {
             relevantHits = relevantHits.filter(h => h.type === 'main');
         } else if (this.practiceMode === 'offbeat') {
@@ -1005,6 +1005,7 @@ class Metronome {
         });
 
         if (closest) {
+            closest.tapped = true; // Mark as processed
             this.displayEvaluation(minDiff);
         }
     }
@@ -1119,6 +1120,44 @@ class Metronome {
         }
     }
 
+    checkMissedHits() {
+        if (!audioContext || !this.isPlaying) return;
+        const now = audioContext.currentTime;
+
+        // Threshold for "Miss" is > 0.12s late. 
+        // We'll use a slightly larger buffer (0.2s) to be sure the user isn't just very late.
+        // If it's been > 0.2s since the beat time and it hasn't been tapped, it's a miss.
+
+        this.expectedHits.forEach(hit => {
+            if (hit.tapped) return; // Already tapped
+
+            // Check if this hit triggers a miss for the current mode
+            let relevant = false;
+            if (this.practiceMode === 'main' && hit.type === 'main') relevant = true;
+            else if (this.practiceMode === 'offbeat' && hit.type === 'offbeat') relevant = true;
+            else if (this.practiceMode === 'both') relevant = true;
+
+            if (relevant) {
+                if (now - hit.time > 0.20) {
+                    // Missed!
+                    hit.tapped = true; // Mark as handled so we don't process it again
+
+                    // Silent Combo Reset
+                    if (this.comboCount > 0) {
+                        this.comboCount = 0;
+                        this.updateComboDisplay();
+                    }
+                    // Optionally trigger a "miss" count increment silently?
+                    // User request: "MISSなどの評価を出さない" (Don't show MISS evaluation)
+                    // "コンボがリセットされる" (Combo resets)
+                    // We will NOT increment MISS count to avoid negative feedback visually, strictly following request.
+                    // If user wants to track misses in stats but not show big red text, that wasn't specified.
+                    // For now, only reset combo.
+                }
+            }
+        });
+    }
+
     toggle() {
         this.isPlaying = !this.isPlaying;
         const btn = this.element.querySelector('.unit-play-btn');
@@ -1205,6 +1244,9 @@ function scheduler() {
             scheduleMetronomeNote(m, m.nextNoteTime);
             advanceMetronomeNote(m);
         }
+
+        // Check for missed hits
+        m.checkMissedHits();
     });
 
     // Continue loop if anyone is playing
