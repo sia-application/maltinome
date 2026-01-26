@@ -295,7 +295,7 @@ header h1 {
 .pitch-input {
     background: transparent;
     border: none;
-    width: 65px;
+    width: 80px;
     text-align: right;
     outline: none;
     font-family: inherit;
@@ -2157,6 +2157,8 @@ header h1 {
     display: flex;
     align-items: center;
     gap: 4px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
 }
 
 .pitch-unit {
@@ -2245,14 +2247,19 @@ header h1 {
 
     .pitch-note-display-inline {
         white-space: nowrap;
-        font-size: 0.9rem;
+        font-size: 0.85rem;
     }
 
     .volume-input-group {
         justify-content: flex-end;
     }
 
-    .pitch-input,
+    .pitch-input {
+        width: 85px;
+        /* Increased to fit "5000.000" */
+        font-size: 0.9rem;
+    }
+
     .volume-input {
         font-size: 0.9rem;
     }
