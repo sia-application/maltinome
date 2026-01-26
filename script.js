@@ -272,7 +272,7 @@ class Metronome {
             // Allow matching theoretical frequency rounded to 3 decimal places ONLY
             const fix3 = Math.round(exactFreq * 1000) / 1000;
 
-            const matches3 = Math.abs(freq - fix3) < 0.0001;
+            const matches3 = Math.abs(freq - fix3) < 0.000001;
 
             if (!matches3) return '';
 
@@ -287,14 +287,20 @@ class Metronome {
             return `(${jp}/${en}${octave})`;
         };
 
+        const truncateTo3 = (val) => {
+            const vStr = String(val);
+            const match = vStr.match(/^-?\d+(?:\.\d{0,3})?/);
+            return match ? parseFloat(match[0]) : NaN;
+        };
+
         const updatePitch = (val, fromInput = false) => {
-            let v = parseFloat(val);
+            let v = truncateTo3(val);
             if (isNaN(v)) return; // Handle empty input
             v = Math.max(20, Math.min(5000, v));
             this.pitch = v;
             pitchSlider.value = v;
             if (!fromInput && pitchInput) {
-                pitchInput.value = v;
+                pitchInput.value = v.toFixed(3);
             }
             if (pitchNoteDisplay) {
                 pitchNoteDisplay.textContent = getNoteName(v);
@@ -389,13 +395,13 @@ class Metronome {
         const offPitchNoteDisplay = el.querySelector('.offbeat-pitch-note-display');
 
         const updateOffbeatPitch = (val, fromInput = false) => {
-            let v = parseFloat(val);
+            let v = truncateTo3(val);
             if (isNaN(v)) return;
             v = Math.max(20, Math.min(5000, v));
             this.offbeatPitch = v;
             offPitchSlider.value = v;
             if (!fromInput && offPitchInput) {
-                offPitchInput.value = v;
+                offPitchInput.value = v.toFixed(3);
             }
             if (offPitchNoteDisplay) {
                 offPitchNoteDisplay.textContent = getNoteName(v);
@@ -582,13 +588,13 @@ class Metronome {
             const pPitchNoteDisplay = el.querySelector('.practice-pitch-note-display');
 
             const updatePPitch = (val, fromInput = false) => {
-                let v = parseFloat(val);
+                let v = truncateTo3(val);
                 if (isNaN(v)) return;
                 v = Math.max(20, Math.min(5000, v));
                 this.practiceMainPitch = v;
                 pPitchSlider.value = v;
                 if (!fromInput && pPitchInput) {
-                    pPitchInput.value = v;
+                    pPitchInput.value = v.toFixed(3);
                 }
                 if (pPitchNoteDisplay) {
                     pPitchNoteDisplay.textContent = getNoteName(v);
@@ -642,13 +648,13 @@ class Metronome {
             const pOffPitchNoteDisplay = el.querySelector('.practice-off-pitch-note-display');
 
             const updatePOffPitch = (val, fromInput = false) => {
-                let v = parseFloat(val);
+                let v = truncateTo3(val);
                 if (isNaN(v)) return;
                 v = Math.max(20, Math.min(5000, v));
                 this.practiceOffPitch = v;
                 pOffPitchSlider.value = v;
                 if (!fromInput && pOffPitchInput) {
-                    pOffPitchInput.value = v;
+                    pOffPitchInput.value = v.toFixed(3);
                 }
                 if (pOffPitchNoteDisplay) {
                     pOffPitchNoteDisplay.textContent = getNoteName(v);
