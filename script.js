@@ -91,6 +91,7 @@ class Metronome {
         this.practiceOffVol = 1.0;
         this.practiceMainPitch = 783.991;
         this.practiceOffPitch = 587.330;
+        this.tapButtonCount = 1; // 1 or 2
 
         // Tuning Fork State
         // Tuning Fork State
@@ -1018,6 +1019,24 @@ class Metronome {
                     updateJudgeText(this.judgeMutedBeats);
                 });
             }
+
+            // Tap Count Toggle
+            const tapCountToggle = el.querySelector('#tap-count-toggle');
+            const tapCountValue = tapCountToggle ? tapCountToggle.querySelector('.visual-mode-value') : null;
+
+            if (tapCountToggle && tapCountValue) {
+                tapCountToggle.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    this.tapButtonCount = this.tapButtonCount === 1 ? 2 : 1;
+                    tapCountValue.textContent = this.tapButtonCount === 1 ? '1つ' : '2つ';
+
+                    // Toggle visibility of second button
+                    const taps = el.querySelectorAll('.practice-tap-area');
+                    if (taps.length > 1) {
+                        taps[1].style.display = this.tapButtonCount === 2 ? 'flex' : 'none';
+                    }
+                });
+            }
         }
 
         // Initialize Main displays
@@ -1026,7 +1045,8 @@ class Metronome {
         updateVol(Math.round(this.volume * 100));
         updateOffVol(Math.round(this.offbeatVolume * 100));
 
-        if (practiceTap) {
+        const practiceTaps = el.querySelectorAll('.practice-tap-area');
+        if (practiceTaps.length > 0) {
             // Use touchstart for lower latency on mobile, mousedown for desktop
             const handleTap = (e) => {
                 e.preventDefault(); // Prevent double firing
@@ -1070,11 +1090,14 @@ class Metronome {
 
                 this.evaluateTap();
                 // Visual feedback
-                practiceTap.style.transform = 'scale(0.95)';
-                setTimeout(() => practiceTap.style.transform = '', 50);
+                e.currentTarget.style.transform = 'scale(0.95)';
+                setTimeout(() => e.currentTarget.style.transform = '', 50);
             };
-            practiceTap.addEventListener('touchstart', handleTap, { passive: false });
-            practiceTap.addEventListener('mousedown', handleTap);
+
+            practiceTaps.forEach(tapBtn => {
+                tapBtn.addEventListener('touchstart', handleTap, { passive: false });
+                tapBtn.addEventListener('mousedown', handleTap);
+            });
         }
 
         if (resetBtn) {

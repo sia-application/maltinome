@@ -2028,9 +2028,16 @@ header h1 {
 
 
 
-.practice-tap-area {
+.practice-tap-container {
     width: 100%;
-    aspect-ratio: 3/1;
+    display: flex;
+    gap: 12px;
+    margin-bottom: 30px;
+}
+
+.practice-tap-area {
+    flex: 1;
+    height: 120px;
     background: linear-gradient(135deg, rgba(108, 92, 231, 0.1), rgba(253, 121, 168, 0.1));
     border: 2px dashed rgba(255, 255, 255, 0.2);
     border-radius: 20px;
@@ -2043,7 +2050,7 @@ header h1 {
     align-items: center;
     justify-content: center;
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-    margin-bottom: 30px;
+    margin-bottom: 0;
 }
 
 .practice-tap-area:active {
