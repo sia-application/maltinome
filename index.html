@@ -271,10 +271,12 @@
                     <div class="volume-section tap-count-setting section-divider"
                         style="display: flex; flex-direction: column; align-items: center; margin-top: 16px;">
                         <h2>TAPボタン数</h2>
-                        <button type="button" class="visual-mode-toggle" id="tap-count-toggle"
-                            style="width: auto; min-width: 200px;">
-                            <span class="visual-mode-label" style="display:none">ボタン数</span>
-                            <span class="visual-mode-value">1つ</span>
+                        <button type="button" class="tap-count-toggle" id="tap-count-toggle">
+                            <span class="toggle-label">1つ</span>
+                            <div class="toggle-switch">
+                                <div class="toggle-slider"></div>
+                            </div>
+                            <span class="toggle-label">2つ</span>
                         </button>
                     </div>
                 </div>
@@ -462,7 +464,7 @@
                     <h2>インパクト表示</h2>
                     <button type="button" class="visual-mode-toggle" id="impact-visual-toggle" data-mode="main">
                         <span class="visual-mode-label" style="display:none">インパクト表示</span>
-                        <span class="visual-mode-value">表拍のみ</span>
+                        <span class="visual-mode-value">表拍だけ表示</span>
                     </button>
                 </div>
             </div>

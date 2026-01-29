@@ -1474,7 +1474,7 @@ header h1 {
     text-align: center;
     font-size: 1rem;
     color: var(--text-secondary);
-    margin-bottom: 12px;
+    margin-bottom: 0;
     text-transform: uppercase;
     letter-spacing: 1px;
     /* display: none; Removed */
@@ -2351,4 +2351,55 @@ header h1 {
     color: white;
     border-color: #e67e22;
     box-shadow: 0 0 10px rgba(230, 126, 34, 0.4);
+}
+
+/* TAP Count Toggle - Based on .offbeat-toggle */
+.tap-count-toggle {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 20px;
+    border: 2px solid var(--bg-glass);
+    border-radius: 50px;
+    background: var(--bg-glass);
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.tap-count-toggle:hover {
+    border-color: var(--secondary);
+    background: rgba(162, 155, 254, 0.1);
+}
+
+.tap-count-toggle .toggle-label:first-child {
+    color: var(--beat-active);
+    font-weight: 600;
+}
+
+.tap-count-toggle .toggle-label:last-child {
+    color: var(--text-secondary);
+    font-weight: 400;
+}
+
+/* Active State (2 buttons) */
+.tap-count-toggle.two-buttons .toggle-label:first-child {
+    color: var(--text-secondary);
+    font-weight: 400;
+}
+
+.tap-count-toggle.two-buttons .toggle-label:last-child {
+    color: var(--beat-active);
+    font-weight: 600;
+}
+
+.tap-count-toggle.two-buttons .toggle-slider {
+    left: 26px;
+    background: var(--beat-active);
+    box-shadow: 0 0 10px rgba(0, 210, 211, 0.5);
+}
+
+.tap-count-toggle:not(.two-buttons) .toggle-slider {
+    background: var(--beat-active);
+    box-shadow: 0 0 10px rgba(0, 210, 211, 0.5);
 }

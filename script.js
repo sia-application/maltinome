@@ -644,9 +644,14 @@ class Metronome {
         });
 
         const accToggle = el.querySelector('.accent-toggle');
+        const accLabel = accToggle ? accToggle.querySelector('.accent-label') : null;
+
         accToggle.addEventListener('click', () => {
             this.accentEnabled = !this.accentEnabled;
             accToggle.classList.toggle('active', this.accentEnabled);
+            if (accLabel) {
+                accLabel.textContent = this.accentEnabled ? 'ON' : 'OFF';
+            }
         });
 
         // Visual Mode Toggle
@@ -673,9 +678,9 @@ class Metronome {
 
                 // Update Text
                 const textMap = {
-                    'main': '表拍のみ',
-                    'offbeat': '裏拍のみ',
-                    'both': '両拍'
+                    'main': '表拍だけ表示',
+                    'offbeat': '裏拍だけ表示',
+                    'both': '両拍表示'
                 };
 
                 if (visValue) {
@@ -1021,14 +1026,16 @@ class Metronome {
             }
 
             // Tap Count Toggle
+            // Tap Count Toggle
             const tapCountToggle = el.querySelector('#tap-count-toggle');
-            const tapCountValue = tapCountToggle ? tapCountToggle.querySelector('.visual-mode-value') : null;
 
-            if (tapCountToggle && tapCountValue) {
+            if (tapCountToggle) {
                 tapCountToggle.addEventListener('click', (e) => {
                     e.preventDefault();
                     this.tapButtonCount = this.tapButtonCount === 1 ? 2 : 1;
-                    tapCountValue.textContent = this.tapButtonCount === 1 ? '1つ' : '2つ';
+
+                    // Toggle class for visual state
+                    tapCountToggle.classList.toggle('two-buttons', this.tapButtonCount === 2);
 
                     // Toggle visibility of second button
                     const taps = el.querySelectorAll('.practice-tap-area');
