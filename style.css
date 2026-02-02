@@ -1805,8 +1805,12 @@ header h1 {
     justify-content: flex-end;
 }
 
-.save-folder-container #save-folder-select {
+.local-save-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
     width: 100%;
+    align-items: center;
 }
 
 .preset-name-input {
