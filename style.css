@@ -128,6 +128,18 @@ header h1 {
     -webkit-text-fill-color: transparent;
     background-clip: text;
     margin-bottom: 24px;
+    cursor: pointer;
+    transition: transform 0.2s, opacity 0.2s;
+    user-select: none;
+}
+
+header h1:hover {
+    transform: scale(1.05);
+    opacity: 0.9;
+}
+
+header h1:active {
+    transform: scale(0.95);
 }
 
 /* Tempo Display */

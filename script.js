@@ -52,6 +52,7 @@ document.addEventListener('click', unlockAudio);
 
 // DOM Elements
 const playBtn = document.getElementById('play-btn');
+const appTitle = document.getElementById('app-title');
 const addMetronomeBtn = document.getElementById('add-metronome-btn');
 const metronomesContainer = document.getElementById('metronomes-container');
 const metronomeTemplate = document.getElementById('metronome-template');
@@ -2583,4 +2584,12 @@ newFolderInput.addEventListener('keypress', (e) => {
 
 sharePresetBtn.addEventListener('click', sharePreset);
 if (copyShareUrlBtn) copyShareUrlBtn.addEventListener('click', copyShareUrl);
+
+if (appTitle) {
+    appTitle.addEventListener('click', () => {
+        if (window.confirm('更新しますか？')) {
+            window.location.reload();
+        }
+    });
+}
 
