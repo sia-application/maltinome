@@ -2524,6 +2524,12 @@ async function checkUrlParams() {
     const shareId = params.get('s');
 
     if (shareId) {
+        try {
+            await ensureAuth();
+        } catch (authError) {
+            console.error("Auth failed for shared URL:", authError);
+            // Even if auth fails, try to fetch (though it will likely fail)
+        }
         const sharedData = await getSharedPreset(shareId);
         if (sharedData && sharedData.metronomes) {
             // Stop all
