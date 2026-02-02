@@ -1987,7 +1987,7 @@ function applyMetronomeState(metronome, state) {
     // Volume
     metronome.volume = state.volume !== undefined ? state.volume : 1.0;
     const volVal = Math.round(metronome.volume * 100);
-    el.querySelector('.volume-slider').value = volVal;
+    el.querySelector('.detail-settings .volume-slider').value = volVal;
     const volInput = el.querySelector('.main-volume-input');
     if (volInput) volInput.value = volVal;
     const muteBtn = el.querySelector('.main-mute-btn');
@@ -1997,7 +1997,7 @@ function applyMetronomeState(metronome, state) {
     // Offbeat Volume
     metronome.offbeatVolume = state.offbeatVolume !== undefined ? state.offbeatVolume : 0;
     const offVolVal = Math.round(metronome.offbeatVolume * 100);
-    el.querySelector('.offbeat-volume-slider').value = offVolVal;
+    el.querySelector('.detail-settings .offbeat-volume-slider').value = offVolVal;
     const offVolInput = el.querySelector('.offbeat-volume-input');
     if (offVolInput) offVolInput.value = offVolVal;
     const offMuteBtn = el.querySelector('.offbeat-mute-btn');
@@ -2147,8 +2147,8 @@ function applyMetronomeState(metronome, state) {
     syncStepUI('.offbeat-pitch-step-btn', '.detail-settings .offbeat-pitch-slider', metronome.offbeatPitchStep);
     syncStepUI('.practice-pitch-step-btn', '.practice-pitch-slider', metronome.practicePitchStep);
     syncStepUI('.practice-off-pitch-step-btn', '.practice-off-pitch-slider', metronome.practiceOffPitchStep);
-    syncStepUI('.vol-step-btn', '.volume-slider', metronome.volumeStep);
-    syncStepUI('.offbeat-vol-step-btn', '.offbeat-volume-slider', metronome.offbeatVolumeStep);
+    syncStepUI('.vol-step-btn', '.detail-settings .volume-slider', metronome.volumeStep);
+    syncStepUI('.offbeat-vol-step-btn', '.detail-settings .offbeat-volume-slider', metronome.offbeatVolumeStep);
     syncStepUI('.practice-vol-step-btn', '.practice-volume-slider', metronome.practiceVolumeStep);
     syncStepUI('.practice-off-vol-step-btn', '.practice-off-volume-slider', metronome.practiceOffVolumeStep);
 
