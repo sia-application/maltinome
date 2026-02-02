@@ -2543,6 +2543,7 @@ async function checkUrlParams() {
                 metronomes.push(m);
                 applyMetronomeState(m, state);
             });
+            adjustUIForParams(); // Refresh UI after loading
             showToast('共有リンクから設定を読み込みました', 'success');
         } else {
             showToast('無効な共有リンクです', 'error');
