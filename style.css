@@ -1378,6 +1378,9 @@ header h1 {
     color: var(--secondary) !important;
     font-size: 0.85rem !important;
     cursor: default;
+    flex: 1 1 0% !important;
+    min-width: 0 !important;
+    width: 0 !important;
 }
 
 .preset-btn.copy-btn:hover {
@@ -1767,6 +1770,7 @@ header h1 {
     font-size: 1.2rem;
     cursor: pointer;
     transition: all 0.2s ease;
+    flex-shrink: 0;
 }
 
 .preset-btn:hover {
@@ -1808,23 +1812,6 @@ header h1 {
     gap: 8px;
     width: 100%;
     align-items: center;
-}
-
-.preset-name-input {
-    width: 100%;
-    padding: 10px 12px;
-    border-radius: 12px;
-    background: var(--bg-dark);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    color: var(--text-primary);
-    font-size: 0.9rem;
-    outline: none;
-    transition: all 0.3s ease;
-}
-
-.preset-name-input:focus {
-    border-color: var(--primary);
-    box-shadow: 0 0 10px rgba(108, 92, 231, 0.2);
 }
 
 /* Save Button */
@@ -1885,7 +1872,6 @@ header h1 {
     }
 
     .save-folder-container #save-folder-select,
-    .preset-name-input,
     #new-folder-input {
         width: 100% !important;
         max-width: 100%;
