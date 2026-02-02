@@ -2453,9 +2453,39 @@ async function sharePreset() {
 
 function copyShareUrl() {
     if (!shareUrlInput || !shareUrlInput.value) return;
-    navigator.clipboard.writeText(shareUrlInput.value)
-        .then(() => showToast('クリップボードにコピーしました！', 'success'))
-        .catch(() => showToast('コピーに失敗しました', 'error'));
+    const text = shareUrlInput.value;
+
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text)
+            .then(() => showToast('クリップボードにコピーしました！', 'success'))
+            .catch(() => fallbackCopy(text));
+    } else {
+        fallbackCopy(text);
+    }
+}
+
+function fallbackCopy(text) {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.style.position = 'fixed';
+    textarea.style.left = '-9999px';
+    textarea.style.top = '0';
+    document.body.appendChild(textarea);
+    textarea.focus();
+    textarea.select();
+    textarea.setSelectionRange(0, 99999);
+
+    try {
+        const success = document.execCommand('copy');
+        if (success) {
+            showToast('クリップボードにコピーしました！', 'success');
+        } else {
+            showToast('コピーに失敗しました', 'error');
+        }
+    } catch (err) {
+        showToast('コピーに失敗しました', 'error');
+    }
+    document.body.removeChild(textarea);
 }
 
 // Adjust UI base on URL params
