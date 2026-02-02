@@ -2403,32 +2403,37 @@ async function sharePreset() {
         return;
     }
 
-    sharePresetBtn.disabled = true;
-    const state = {
-        metronomes: metronomes.map(m => extractMetronomeState(m))
-    };
+    try {
+        sharePresetBtn.disabled = true;
 
-    const shareId = await createSharedPreset(state);
-    if (shareId) {
-        // Update URL
-        const url = new URL(window.location.href);
-        url.searchParams.set('s', shareId);
-        window.history.pushState({}, '', url);
+        const state = {
+            metronomes: metronomes.map(m => extractMetronomeState(m))
+        };
 
-        // Update result UI
-        if (shareUrlInput) shareUrlInput.value = url.toString();
-        if (shareResultContainer) shareResultContainer.style.display = 'flex';
+        const shareId = await createSharedPreset(state);
 
-        // Copy to clipboard
-        try {
-            await navigator.clipboard.writeText(url.toString());
-            showToast('共有用URLをクリップボードにコピーしました！', 'success');
-        } catch (err) {
-            console.error('Failed to copy link:', err);
-            showToast('URLを生成しました。アドレスバーのURLを共有してください', 'info');
+        if (shareId) {
+            // Generate full URL
+            const url = new URL(window.location.href);
+            url.searchParams.set('s', shareId);
+            const shareUrl = url.toString();
+
+            // Update result UI box only (don't update address bar)
+            if (shareUrlInput) shareUrlInput.value = shareUrl;
+            if (shareResultContainer) shareResultContainer.style.display = 'flex';
+
+            showToast('共有用URLを生成しました！', 'success');
+
+            // Button remains disabled after success until reload
+        } else {
+            // Re-enable if sharing failed (createSharedPreset returned null)
+            sharePresetBtn.disabled = false;
         }
+    } catch (err) {
+        console.error('Unexpected error during sharing:', err);
+        showToast('予期せぬエラーが発生しました', 'error');
+        sharePresetBtn.disabled = false;
     }
-    sharePresetBtn.disabled = false;
 }
 
 function copyShareUrl() {
@@ -2450,12 +2455,14 @@ function adjustUIForParams() {
     }
 
     if (hasShareId) {
-        // Standard view: Show everything
+        // Shared page: Hide sharing controls, show preset management (standard mode)
+        if (shareResultContainer) shareResultContainer.style.display = 'none';
         if (presetLoadSection) presetLoadSection.style.display = 'block';
         if (presetFolderSaveControls) presetFolderSaveControls.style.display = 'flex';
         if (localSaveControls) localSaveControls.style.display = 'flex';
     } else {
-        // Base view: Hide list/delete, only show create/share
+        // Base page: Show sharing controls, hide preset management
+        if (shareResultContainer) shareResultContainer.style.display = 'flex';
         if (presetLoadSection) presetLoadSection.style.display = 'none';
         if (presetFolderSaveControls) presetFolderSaveControls.style.display = 'none';
         if (localSaveControls) localSaveControls.style.display = 'none';
