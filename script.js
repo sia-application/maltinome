@@ -1847,16 +1847,30 @@ function showToast(message, type = 'info') {
     }, 2500);
 }
 
+// Helper to get Share ID
+function getShareId() {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('s');
+}
+
 // Data Retrieval (Async)
 async function getPresetData() {
     if (!db) return {};
     try {
         await ensureAuth(); // Wait for auth
         const doc = await db.collection('appData').doc('presets').get();
-        if (doc.exists) {
-            return doc.data();
+        if (!doc.exists) return {};
+
+        const data = doc.data();
+        const shareId = getShareId();
+
+        if (shareId) {
+            // Return only isolated data for this shareId
+            return data._isolated?.[shareId] || {};
         } else {
-            return {};
+            // Return all root-level folders, excluding the _isolated key
+            const { _isolated, ...standardData } = data;
+            return standardData;
         }
     } catch (e) {
         console.error('Failed to load presets from Firebase:', e);
@@ -1865,11 +1879,28 @@ async function getPresetData() {
     }
 }
 
-async function savePresetData(data) {
+async function savePresetData(newData) {
     if (!db) return false;
     try {
         await ensureAuth(); // Wait for auth
-        await db.collection('appData').doc('presets').set(data);
+        const docRef = db.collection('appData').doc('presets');
+        const doc = await docRef.get();
+        let fullData = doc.exists ? doc.data() : {};
+
+        const shareId = getShareId();
+
+        if (shareId) {
+            // Update only the specific isolation box
+            if (!fullData._isolated) fullData._isolated = {};
+            fullData._isolated[shareId] = newData;
+        } else {
+            // Update root-level but preserve existing isolation boxes
+            const isolated = fullData._isolated;
+            fullData = { ...newData };
+            if (isolated) fullData._isolated = isolated;
+        }
+
+        await docRef.set(fullData);
         return true;
     } catch (e) {
         console.error('Failed to save presets to Firebase:', e);
@@ -2292,22 +2323,6 @@ async function savePreset() {
         if (saveFolderSelect.value === 'new') {
             newFolderInput.value = '';
         }
-
-        // --- NEW: Sync with unique URL ---
-        const shareState = {
-            metronomes: metronomes.map(m => extractMetronomeState(m))
-        };
-        const shareId = await createSharedPreset(shareState);
-        if (shareId) {
-            const url = new URL(window.location.href);
-            url.searchParams.set('s', shareId);
-            window.history.pushState({}, '', url);
-
-            // Update result UI
-            if (shareUrlInput) shareUrlInput.value = url.toString();
-            if (shareResultContainer) shareResultContainer.style.display = 'flex';
-        }
-        // ---------------------------------
 
         // Refresh UIs
         await refreshFolderSelects();
