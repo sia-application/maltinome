@@ -1891,7 +1891,19 @@ function extractMetronomeState(metronome) {
         practiceMainPitch: metronome.practiceMainPitch,
         practiceOffPitch: metronome.practiceOffPitch,
         tapButtonCount: metronome.tapButtonCount,
-        comboMode: metronome.comboMode
+        comboMode: metronome.comboMode,
+        // Skip button states
+        pitchStep: metronome.pitchStep,
+        offbeatPitchStep: metronome.offbeatPitchStep,
+        practicePitchStep: metronome.practicePitchStep,
+        practiceOffPitchStep: metronome.practiceOffPitchStep,
+        volumeStep: metronome.volumeStep,
+        offbeatVolumeStep: metronome.offbeatVolumeStep,
+        practiceVolumeStep: metronome.practiceVolumeStep,
+        practiceOffVolumeStep: metronome.practiceOffVolumeStep,
+        // Game results
+        evaluationCounts: { ...metronome.evaluationCounts },
+        comboCount: metronome.comboCount
     };
 }
 
@@ -2070,9 +2082,36 @@ function applyMetronomeState(metronome, state) {
         }
     }
 
-    // Reset practice state
-    metronome.evaluationCounts = { excellent: 0, great: 0, nice: 0, miss: 0 };
-    metronome.comboCount = 0;
+    // --- Skip Button States ---
+    metronome.pitchStep = state.pitchStep || 1;
+    metronome.offbeatPitchStep = state.offbeatPitchStep || 1;
+    metronome.practicePitchStep = state.practicePitchStep || 1;
+    metronome.practiceOffPitchStep = state.practiceOffPitchStep || 1;
+    metronome.volumeStep = state.volumeStep || 1;
+    metronome.offbeatVolumeStep = state.offbeatVolumeStep || 1;
+    metronome.practiceVolumeStep = state.practiceVolumeStep || 1;
+    metronome.practiceOffVolumeStep = state.practiceOffVolumeStep || 1;
+
+    // Helper to sync Skip button UI
+    const syncStepUI = (btnSelector, sliderSelector, currentStep) => {
+        const btn = el.querySelector(btnSelector);
+        const slider = el.querySelector(sliderSelector);
+        if (btn) btn.classList.toggle('active', currentStep === 2);
+        if (slider) slider.classList.toggle('step-skip', currentStep === 2);
+    };
+
+    syncStepUI('.pitch-step-btn', '.detail-settings .pitch-slider', metronome.pitchStep);
+    syncStepUI('.offbeat-pitch-step-btn', '.detail-settings .offbeat-pitch-slider', metronome.offbeatPitchStep);
+    syncStepUI('.practice-pitch-step-btn', '.practice-pitch-slider', metronome.practicePitchStep);
+    syncStepUI('.practice-off-pitch-step-btn', '.practice-off-pitch-slider', metronome.practiceOffPitchStep);
+    syncStepUI('.vol-step-btn', '.volume-slider', metronome.volumeStep);
+    syncStepUI('.offbeat-vol-step-btn', '.offbeat-volume-slider', metronome.offbeatVolumeStep);
+    syncStepUI('.practice-vol-step-btn', '.practice-volume-slider', metronome.practiceVolumeStep);
+    syncStepUI('.practice-off-vol-step-btn', '.practice-off-volume-slider', metronome.practiceOffVolumeStep);
+
+    // --- Game Results ---
+    metronome.evaluationCounts = state.evaluationCounts ? { ...state.evaluationCounts } : { excellent: 0, great: 0, nice: 0, miss: 0 };
+    metronome.comboCount = state.comboCount || 0;
     metronome.updateCountDisplay();
     metronome.updateComboDisplay();
 
