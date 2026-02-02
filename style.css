@@ -1395,6 +1395,16 @@ header h1:active {
     width: 0 !important;
 }
 
+.preset-btn.copy-btn {
+    padding: 8px 12px;
+}
+
+.copy-icon-svg {
+    width: 28px;
+    height: 28px;
+    display: block;
+}
+
 .preset-btn.copy-btn:hover {
     border-color: var(--primary);
     background: rgba(108, 92, 231, 0.2);
