@@ -1742,40 +1742,37 @@ const firebaseConfig = {
     measurementId: "G-NDP49SSC9J"
 };
 
-// Initialize Firebase
-// Initialize Firebase
+// Initialize Firebase placeholder
 let db;
 let auth;
 let user = null;
 
-try {
-    firebase.initializeApp(firebaseConfig);
-    db = firebase.firestore();
-    auth = firebase.auth();
-    console.log("Firebase initialized");
+async function initFirebase() {
+    try {
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+            console.log("Firebase initialized");
+        }
+        db = firebase.firestore();
+        auth = firebase.auth();
 
-    // Anonymous Sign-in
-    auth.signInAnonymously()
-        .then(() => {
+        // Start anonymous sign-in
+        if (!auth.currentUser) {
+            await auth.signInAnonymously();
             console.log("Signed in anonymously");
-        })
-        .catch((error) => {
-            console.error("Anonymous sign-in failed:", error);
-            showToast('ログインに失敗しました', 'error');
+        }
+
+        auth.onAuthStateChanged((u) => {
+            user = u;
+            if (u) console.log("User is signed in:", u.uid);
+            else console.log("User is signed out");
         });
 
-    auth.onAuthStateChanged((u) => {
-        if (u) {
-            user = u;
-            console.log("User is signed in:", user.uid);
-        } else {
-            user = null;
-            console.log("User is signed out");
-        }
-    });
-
-} catch (e) {
-    console.error("Firebase initialization failed:", e);
+        return true;
+    } catch (e) {
+        console.error("Firebase initialization failed:", e);
+        return false;
+    }
 }
 
 // Auth Gatekeeper
@@ -2580,9 +2577,14 @@ newFolderInput.addEventListener('keypress', (e) => {
 (async () => {
     try {
         adjustUIForParams(); // Initial UI adjust
-        await checkUrlParams(); // Check URL first
-        // Wait a bit for auth initiation or just let refreshFolderSelects handle the await ensureAuth
-        await refreshFolderSelects();
+
+        const initialized = await initFirebase();
+        if (initialized) {
+            await checkUrlParams(); // Check URL after Firebase/Auth is ready
+            await refreshFolderSelects();
+        } else {
+            showToast('Firebaseの初期化に失敗しました。オフラインモードで動作します', 'error');
+        }
     } catch (e) {
         console.error("Initial load failed:", e);
     }
