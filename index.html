@@ -37,7 +37,7 @@
                 <button type="button" id="preset-toggle-btn" class="preset-toggle-header">プリセット ▼</button>
 
                 <div id="preset-content-body" class="preset-content-body">
-                    <div class="preset-sub-section">
+                    <div id="preset-load-section" class="preset-sub-section">
                         <h3>読込/削除</h3>
                         <div class="preset-controls">
                             <select id="folder-select" class="preset-select folder-select">
@@ -56,7 +56,7 @@
                     <div class="preset-sub-section">
                         <h3>新規作成</h3>
                         <div class="preset-save-controls">
-                            <div class="save-folder-container">
+                            <div id="preset-folder-save-controls" class="save-folder-container">
                                 <select id="save-folder-select" class="preset-select">
                                     <option value="new">新規フォルダ作成</option>
                                 </select>
@@ -64,25 +64,35 @@
                                     placeholder="フォルダ名を入力..." maxlength="20">
                             </div>
                             <div class="save-preset-container">
-                                <input type="text" id="preset-name-input" class="preset-name-input"
-                                    placeholder="プリセット名を入力..." maxlength="30">
-                                <button id="save-preset-btn" class="preset-btn save-btn" title="保存">💾</button>
+                                <div id="local-save-controls" class="local-save-wrapper"
+                                    style="display: flex; gap: 8px; flex: 1;">
+                                    <input type="text" id="preset-name-input" class="preset-name-input"
+                                        placeholder="プリセット名を入力..." maxlength="30">
+                                    <button id="save-preset-btn" class="preset-btn save-btn" title="保存">💾</button>
+                                </div>
+                                <div id="share-controls-container" class="share-result-container">
+                                    <button id="share-preset-btn" class="preset-btn share-btn"
+                                        title="URLで共有">🔗</button>
+                                    <input type="text" id="share-url-input" class="preset-name-input share-url-input"
+                                        placeholder="共有URLがここに表示されます" readonly>
+                                    <button id="copy-share-url-btn" class="preset-btn copy-btn"
+                                        title="URLをコピー">📋</button>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <div id="metronomes-container"></div>
+                <div id="metronomes-container"></div>
 
-            <button class="add-btn" id="add-metronome-btn" title="メトロノームを追加">＋</button>
+                <button class="add-btn" id="add-metronome-btn" title="メトロノームを追加">＋</button>
 
-            <!-- Play/Stop Button -->
-            <button class="play-btn" id="play-btn">
-                <span class="play-icon">▶</span>
-                <span class="btn-text">スタート</span>
-            </button>
-            <footer class="app-footer">made for SiA v2.1.0</footer>
+                <!-- Play/Stop Button -->
+                <button class="play-btn" id="play-btn">
+                    <span class="play-icon">▶</span>
+                    <span class="btn-text">スタート</span>
+                </button>
+                <footer class="app-footer">made for SiA v2.1.0</footer>
         </main>
     </div>
 

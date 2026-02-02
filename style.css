@@ -1359,10 +1359,35 @@ header h1 {
     color: #e74c3c;
 }
 
+.preset-btn.share-btn:hover {
+    border-color: #f1c40f;
+    background: rgba(241, 196, 15, 0.2);
+    color: #f1c40f;
+}
+
 .preset-btn:disabled {
     opacity: 0.4;
     cursor: not-allowed;
     transform: none;
+}
+
+.share-result-container {
+    display: flex;
+    gap: 8px;
+    width: 100%;
+    margin-top: 8px;
+    animation: slideDown 0.3s ease;
+}
+
+.share-url-input {
+    color: var(--secondary) !important;
+    font-size: 0.85rem !important;
+    cursor: default;
+}
+
+.preset-btn.copy-btn:hover {
+    border-color: var(--primary);
+    background: rgba(108, 92, 231, 0.2);
 }
 
 .preset-save-controls {

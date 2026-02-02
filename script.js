@@ -1717,7 +1717,11 @@ if (presetToggleBtn && presetSection && presetContentBody) {
     presetToggleBtn.addEventListener('click', () => {
         const isOpen = presetContentBody.classList.toggle('open');
         presetSection.classList.toggle('open', isOpen);
-        presetToggleBtn.textContent = isOpen ? 'プリセット ▲' : 'プリセット ▼';
+
+        const params = new URLSearchParams(window.location.search);
+        const hasShareId = params.has('s');
+        const baseTitle = hasShareId ? 'プリセット' : '共有ページ作成';
+        presetToggleBtn.textContent = `${baseTitle} ${isOpen ? '▲' : '▼'}`;
     });
 }
 
@@ -1802,10 +1806,18 @@ const saveFolderSelect = document.getElementById('save-folder-select');
 const newFolderInput = document.getElementById('new-folder-input');
 const presetNameInput = document.getElementById('preset-name-input');
 const savePresetBtn = document.getElementById('save-preset-btn');
+const sharePresetBtn = document.getElementById('share-preset-btn');
 
 // Action Buttons
 const loadPresetBtn = document.getElementById('load-preset-btn');
 const deletePresetBtn = document.getElementById('delete-preset-btn');
+
+const shareResultContainer = document.getElementById('share-result-container');
+const shareUrlInput = document.getElementById('share-url-input');
+const copyShareUrlBtn = document.getElementById('copy-share-url-btn');
+const localSaveControls = document.getElementById('local-save-controls');
+const presetLoadSection = document.getElementById('preset-load-section');
+const presetFolderSaveControls = document.getElementById('preset-folder-save-controls');
 
 // Toast notification element
 let toastElement = null;
@@ -1863,6 +1875,37 @@ async function savePresetData(data) {
         console.error('Failed to save presets to Firebase:', e);
         showToast('データの保存に失敗しました', 'error');
         return false;
+    }
+}
+
+// Share Data Retrieval/Save
+async function getSharedPreset(id) {
+    if (!db) return null;
+    try {
+        const doc = await db.collection('sharedPresets').doc(id).get();
+        if (doc.exists) {
+            return doc.data();
+        }
+        return null;
+    } catch (e) {
+        console.error('Failed to fetch shared preset:', e);
+        return null;
+    }
+}
+
+async function createSharedPreset(state) {
+    if (!db) return null;
+    try {
+        await ensureAuth();
+        const docRef = await db.collection('sharedPresets').add({
+            ...state,
+            createdAt: Date.now()
+        });
+        return docRef.id;
+    } catch (e) {
+        console.error('Failed to share preset:', e);
+        showToast('共有に失敗しました', 'error');
+        return null;
     }
 }
 
@@ -2250,6 +2293,22 @@ async function savePreset() {
             newFolderInput.value = '';
         }
 
+        // --- NEW: Sync with unique URL ---
+        const shareState = {
+            metronomes: metronomes.map(m => extractMetronomeState(m))
+        };
+        const shareId = await createSharedPreset(shareState);
+        if (shareId) {
+            const url = new URL(window.location.href);
+            url.searchParams.set('s', shareId);
+            window.history.pushState({}, '', url);
+
+            // Update result UI
+            if (shareUrlInput) shareUrlInput.value = url.toString();
+            if (shareResultContainer) shareResultContainer.style.display = 'flex';
+        }
+        // ---------------------------------
+
         // Refresh UIs
         await refreshFolderSelects();
 
@@ -2337,6 +2396,101 @@ async function deletePreset() {
     deletePresetBtn.disabled = false;
 }
 
+// SHARE Logic
+async function sharePreset() {
+    if (metronomes.length === 0) {
+        showToast('共有するメトロノームがありません', 'error');
+        return;
+    }
+
+    sharePresetBtn.disabled = true;
+    const state = {
+        metronomes: metronomes.map(m => extractMetronomeState(m))
+    };
+
+    const shareId = await createSharedPreset(state);
+    if (shareId) {
+        // Update URL
+        const url = new URL(window.location.href);
+        url.searchParams.set('s', shareId);
+        window.history.pushState({}, '', url);
+
+        // Update result UI
+        if (shareUrlInput) shareUrlInput.value = url.toString();
+        if (shareResultContainer) shareResultContainer.style.display = 'flex';
+
+        // Copy to clipboard
+        try {
+            await navigator.clipboard.writeText(url.toString());
+            showToast('共有用URLをクリップボードにコピーしました！', 'success');
+        } catch (err) {
+            console.error('Failed to copy link:', err);
+            showToast('URLを生成しました。アドレスバーのURLを共有してください', 'info');
+        }
+    }
+    sharePresetBtn.disabled = false;
+}
+
+function copyShareUrl() {
+    if (!shareUrlInput || !shareUrlInput.value) return;
+    navigator.clipboard.writeText(shareUrlInput.value)
+        .then(() => showToast('クリップボードにコピーしました！', 'success'))
+        .catch(() => showToast('コピーに失敗しました', 'error'));
+}
+
+// Adjust UI base on URL params
+function adjustUIForParams() {
+    const params = new URLSearchParams(window.location.search);
+    const hasShareId = params.has('s');
+
+    if (presetToggleBtn) {
+        const isOpen = presetContentBody.classList.contains('open');
+        const baseTitle = hasShareId ? 'プリセット' : '共有ページ作成';
+        presetToggleBtn.textContent = `${baseTitle} ${isOpen ? '▲' : '▼'}`;
+    }
+
+    if (hasShareId) {
+        // Standard view: Show everything
+        if (presetLoadSection) presetLoadSection.style.display = 'block';
+        if (presetFolderSaveControls) presetFolderSaveControls.style.display = 'flex';
+        if (localSaveControls) localSaveControls.style.display = 'flex';
+    } else {
+        // Base view: Hide list/delete, only show create/share
+        if (presetLoadSection) presetLoadSection.style.display = 'none';
+        if (presetFolderSaveControls) presetFolderSaveControls.style.display = 'none';
+        if (localSaveControls) localSaveControls.style.display = 'none';
+    }
+}
+
+// Handle URL Loading
+async function checkUrlParams() {
+    const params = new URLSearchParams(window.location.search);
+    const shareId = params.get('s');
+
+    if (shareId) {
+        const sharedData = await getSharedPreset(shareId);
+        if (sharedData && sharedData.metronomes) {
+            // Stop all
+            metronomes.forEach(m => {
+                if (m.isPlaying) m.toggle();
+            });
+            // Clear all
+            while (metronomes.length > 0) {
+                metronomes[0].remove();
+            }
+            // Load
+            sharedData.metronomes.forEach(state => {
+                const m = new Metronome(Date.now() + Math.random());
+                metronomes.push(m);
+                applyMetronomeState(m, state);
+            });
+            showToast('共有リンクから設定を読み込みました', 'success');
+        } else {
+            showToast('無効な共有リンクです', 'error');
+        }
+    }
+}
+
 
 // Event Listeners
 savePresetBtn.addEventListener('click', savePreset);
@@ -2363,10 +2517,15 @@ newFolderInput.addEventListener('keypress', (e) => {
 // Initialize
 (async () => {
     try {
+        adjustUIForParams(); // Initial UI adjust
+        await checkUrlParams(); // Check URL first
         // Wait a bit for auth initiation or just let refreshFolderSelects handle the await ensureAuth
         await refreshFolderSelects();
     } catch (e) {
         console.error("Initial load failed:", e);
     }
 })();
+
+sharePresetBtn.addEventListener('click', sharePreset);
+if (copyShareUrlBtn) copyShareUrlBtn.addEventListener('click', copyShareUrl);
 
