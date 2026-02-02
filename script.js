@@ -2462,6 +2462,7 @@ function copyShareUrl() {
 function adjustUIForParams() {
     const params = new URLSearchParams(window.location.search);
     const hasShareId = params.has('s');
+    const newCreationTitle = document.getElementById('new-creation-title');
 
     if (presetToggleBtn) {
         const isOpen = presetContentBody.classList.contains('open');
@@ -2471,12 +2472,14 @@ function adjustUIForParams() {
 
     if (hasShareId) {
         // Shared page: Hide sharing controls, show preset management (standard mode)
+        if (newCreationTitle) newCreationTitle.style.display = 'block';
         if (shareResultContainer) shareResultContainer.style.display = 'none';
         if (presetLoadSection) presetLoadSection.style.display = 'block';
         if (presetFolderSaveControls) presetFolderSaveControls.style.display = 'flex';
         if (localSaveControls) localSaveControls.style.display = 'flex';
     } else {
         // Base page: Show sharing controls, hide preset management
+        if (newCreationTitle) newCreationTitle.style.display = 'none';
         if (shareResultContainer) shareResultContainer.style.display = 'flex';
         if (presetLoadSection) presetLoadSection.style.display = 'none';
         if (presetFolderSaveControls) presetFolderSaveControls.style.display = 'none';
