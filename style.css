@@ -1280,7 +1280,9 @@ header h1 {
 
     .preset-controls .load-btn,
     .preset-controls .delete-btn {
-        flex: 1;
+        flex: 0 0 auto;
+        width: 40px;
+        height: 40px;
     }
 }
 
