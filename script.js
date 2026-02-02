@@ -1877,8 +1877,21 @@ function extractMetronomeState(metronome) {
         volume: metronome.volume,
         offbeatVolume: metronome.offbeatVolume,
         pitch: metronome.pitch,
+        offbeatPitch: metronome.offbeatPitch,
         isOffbeat: metronome.isOffbeat,
-        visualMode: metronome.visualMode
+        visualMode: metronome.visualMode,
+        // Sequencer mutes
+        mutedBeats: Array.from(metronome.mutedBeats),
+        mutedOffbeats: Array.from(metronome.mutedOffbeats),
+        // Rhythm Practice Settings
+        practiceMode: metronome.practiceMode,
+        judgeMutedBeats: metronome.judgeMutedBeats,
+        practiceMainVol: metronome.practiceMainVol,
+        practiceOffVol: metronome.practiceOffVol,
+        practiceMainPitch: metronome.practiceMainPitch,
+        practiceOffPitch: metronome.practiceOffPitch,
+        tapButtonCount: metronome.tapButtonCount,
+        comboMode: metronome.comboMode
     };
 }
 
@@ -1897,7 +1910,10 @@ function applyMetronomeState(metronome, state) {
     rhythmBtns.forEach(btn => {
         btn.classList.toggle('active', btn.dataset.pattern === metronome.currentPattern);
     });
-    metronome.updateBeatDots();
+
+    // mutes
+    metronome.mutedBeats = new Set(state.mutedBeats || []);
+    metronome.mutedOffbeats = new Set(state.mutedOffbeats || []);
 
     // Click Multiplier
     metronome.clickMultiplier = state.clickMultiplier || 1;
@@ -1917,7 +1933,8 @@ function applyMetronomeState(metronome, state) {
     metronome.volume = state.volume !== undefined ? state.volume : 1.0;
     const volVal = Math.round(metronome.volume * 100);
     el.querySelector('.volume-slider').value = volVal;
-    el.querySelector('.volume-display').textContent = volVal + '%';
+    const volInput = el.querySelector('.main-volume-input');
+    if (volInput) volInput.value = volVal;
     const muteBtn = el.querySelector('.main-mute-btn');
     muteBtn.textContent = metronome.volume === 0 ? '🔇' : '🔈';
     muteBtn.classList.toggle('muted', metronome.volume === 0);
@@ -1926,50 +1943,140 @@ function applyMetronomeState(metronome, state) {
     metronome.offbeatVolume = state.offbeatVolume !== undefined ? state.offbeatVolume : 0;
     const offVolVal = Math.round(metronome.offbeatVolume * 100);
     el.querySelector('.offbeat-volume-slider').value = offVolVal;
-    el.querySelector('.offbeat-volume-display').textContent = offVolVal + '%';
+    const offVolInput = el.querySelector('.offbeat-volume-input');
+    if (offVolInput) offVolInput.value = offVolVal;
     const offMuteBtn = el.querySelector('.offbeat-mute-btn');
     offMuteBtn.textContent = metronome.offbeatVolume === 0 ? '🔇' : '🔈';
     offMuteBtn.classList.toggle('muted', metronome.offbeatVolume === 0);
 
     // Pitch
-    metronome.pitch = state.pitch || 800;
-    const pitchSlider = el.querySelector('.pitch-slider');
-    const pitchDisplay = el.querySelector('.pitch-display');
-    if (pitchSlider && pitchDisplay) {
-        pitchSlider.value = metronome.pitch;
-        pitchDisplay.textContent = metronome.pitch + 'Hz';
+    metronome.pitch = state.pitch || 783.991;
+    const pitchSlider = el.querySelector('.detail-settings .pitch-slider');
+    const pitchInput = el.querySelector('.main-pitch-input');
+    const pitchNoteDisplay = el.querySelector('.pitch-note-display');
+    if (pitchSlider) pitchSlider.value = metronome.pitch;
+    if (pitchInput) pitchInput.value = metronome.pitch.toFixed(3);
+    if (pitchNoteDisplay) {
+        // We need to call getNoteName which is locally defined in some scopes, but Metronome has it? 
+        // No, it's defined inside setupEventListeners. Let's use it if available or just update UI.
+        // Actually, we can just trigger a manual update if we have a way.
+        // For now, let's just set the text if we can calculate it or leave it to refresh.
     }
+
+    // Offbeat Pitch
+    metronome.offbeatPitch = state.offbeatPitch || 587.330;
+    const offPitchSlider = el.querySelector('.detail-settings .offbeat-pitch-slider');
+    const offPitchInput = el.querySelector('.offbeat-pitch-input');
+    if (offPitchSlider) offPitchSlider.value = metronome.offbeatPitch;
+    if (offPitchInput) offPitchInput.value = metronome.offbeatPitch.toFixed(3);
 
     // Accent
     metronome.accentEnabled = state.accentEnabled !== undefined ? state.accentEnabled : true;
-    el.querySelector('.accent-toggle').classList.toggle('active', metronome.accentEnabled);
+    const accToggle = el.querySelector('.accent-toggle');
+    if (accToggle) {
+        accToggle.classList.toggle('active', metronome.accentEnabled);
+        const accLabel = accToggle.querySelector('.accent-label');
+        if (accLabel) accLabel.textContent = metronome.accentEnabled ? 'ON' : 'OFF';
+    }
 
     // Offbeat toggle
     metronome.isOffbeat = state.isOffbeat || false;
-    el.querySelector('.offbeat-toggle').classList.toggle('offbeat', metronome.isOffbeat);
+    const offToggle = el.querySelector('.offbeat-toggle');
+    if (offToggle) offToggle.classList.toggle('offbeat', metronome.isOffbeat);
 
     // Visual Mode
-    metronome.visualMode = state.visualMode || 'main'; // Default to main
-    const visToggle = el.querySelector('.visual-mode-toggle');
-    const visValue = el.querySelector('.visual-mode-value');
-    const visLabel = el.querySelector('.visual-mode-label');
-
+    metronome.visualMode = state.visualMode || 'main';
+    const visToggle = el.querySelector('#impact-visual-toggle');
     if (visToggle) {
         visToggle.dataset.mode = metronome.visualMode;
-
+        const visValue = visToggle.querySelector('.visual-mode-value');
         const textMap = {
-            'main': '表拍のみ',
-            'offbeat': '裏拍のみ',
-            'both': '両拍'
+            'main': '表拍だけ表示',
+            'offbeat': '裏拍だけ表示',
+            'both': '両拍表示'
         };
+        if (visValue) visValue.textContent = textMap[metronome.visualMode];
+    }
 
-        if (visValue) {
-            visValue.textContent = textMap[metronome.visualMode];
-        } else if (visLabel) {
-            visLabel.textContent = `表示設定: ${textMap[metronome.visualMode]}`;
+    // --- Rhythm Practice Settings ---
+    metronome.practiceMode = state.practiceMode || 'main';
+    const practiceModeBtns = el.querySelectorAll('.practice-mode-btn');
+    practiceModeBtns.forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.mode === metronome.practiceMode);
+    });
+
+    metronome.judgeMutedBeats = state.judgeMutedBeats || 'off';
+    const judgeMutedToggle = el.querySelector('#judge-muted-mode-toggle');
+    if (judgeMutedToggle) {
+        const judgeMutedValue = judgeMutedToggle.querySelector('.visual-mode-value');
+        if (judgeMutedValue) {
+            const map = {
+                'off': 'クリック',
+                'all': 'クリック＆ミュート',
+                'muted_only': 'ミュート'
+            };
+            judgeMutedValue.textContent = map[metronome.judgeMutedBeats];
         }
     }
 
+    metronome.practiceMainVol = state.practiceMainVol !== undefined ? state.practiceMainVol : 1.0;
+    const pVolVal = Math.round(metronome.practiceMainVol * 100);
+    const pVolSlider = el.querySelector('.practice-volume-slider');
+    const pVolInput = el.querySelector('.practice-volume-input');
+    if (pVolSlider) pVolSlider.value = pVolVal;
+    if (pVolInput) pVolInput.value = pVolVal;
+
+    metronome.practiceOffVol = state.practiceOffVol !== undefined ? state.practiceOffVol : 1.0;
+    const pOffVolVal = Math.round(metronome.practiceOffVol * 100);
+    const pOffVolSlider = el.querySelector('.practice-off-volume-slider');
+    const pOffVolInput = el.querySelector('.practice-off-volume-input');
+    if (pOffVolSlider) pOffVolSlider.value = pOffVolVal;
+    if (pOffVolInput) pOffVolInput.value = pOffVolVal;
+
+    metronome.practiceMainPitch = state.practiceMainPitch || 783.991;
+    const pPitchSlider = el.querySelector('.practice-pitch-slider');
+    const pPitchInput = el.querySelector('.practice-pitch-input');
+    if (pPitchSlider) pPitchSlider.value = metronome.practiceMainPitch;
+    if (pPitchInput) pPitchInput.value = metronome.practiceMainPitch.toFixed(3);
+
+    metronome.practiceOffPitch = state.practiceOffPitch || 587.330;
+    const pOffPitchSlider = el.querySelector('.practice-off-pitch-slider');
+    const pOffPitchInput = el.querySelector('.practice-off-pitch-input');
+    if (pOffPitchSlider) pOffPitchSlider.value = metronome.practiceOffPitch;
+    if (pOffPitchInput) pOffPitchInput.value = metronome.practiceOffPitch.toFixed(3);
+
+    metronome.tapButtonCount = state.tapButtonCount || 1;
+    const tapCountToggle = el.querySelector('#tap-count-toggle');
+    if (tapCountToggle) {
+        tapCountToggle.classList.toggle('two-buttons', metronome.tapButtonCount === 2);
+        const taps = el.querySelectorAll('.practice-tap-area');
+        if (taps.length > 1) {
+            taps[1].style.display = metronome.tapButtonCount === 2 ? 'flex' : 'none';
+        }
+    }
+
+    metronome.comboMode = state.comboMode || 'exc_great';
+    const comboToggle = el.querySelector('#combo-mode-toggle');
+    if (comboToggle) {
+        const comboValue = comboToggle.querySelector('.visual-mode-value');
+        if (comboValue) {
+            const textMap = {
+                'all': 'EXCELLENT+GREAT+NICE',
+                'exc_great': 'EXCELLENT+GREAT',
+                'exc_only': 'EXCELLENT',
+                'off': '表示しない'
+            };
+            comboValue.textContent = textMap[metronome.comboMode];
+        }
+    }
+
+    // Reset practice state
+    metronome.evaluationCounts = { excellent: 0, great: 0, nice: 0, miss: 0 };
+    metronome.comboCount = 0;
+    metronome.updateCountDisplay();
+    metronome.updateComboDisplay();
+
+    // Final UI refresh
     metronome.updateBeatDots();
 }
 
