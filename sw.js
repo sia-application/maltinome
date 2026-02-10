@@ -1,4 +1,4 @@
-const CACHE_NAME = 'v1';
+const CACHE_NAME = 'v2';
 const urlsToCache = [
     './',
     './index.html',
@@ -11,7 +11,7 @@ const urlsToCache = [
 self.addEventListener('install', (event) => {
     // skipWaiting()を実行し、待機状態をスキップして即時にアクティブにする
     self.skipWaiting();
-    
+
     event.waitUntil(
         caches.open(CACHE_NAME)
             .then((cache) => {
