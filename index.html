@@ -23,6 +23,13 @@
                         setInterval(() => {
                             reg.update();
                         }, 3600000);
+
+                        // アプリがアクティブになった時に更新チェックを行う
+                        document.addEventListener('visibilitychange', () => {
+                            if (document.visibilityState === 'visible') {
+                                reg.update();
+                            }
+                        });
                     })
                     .catch(err => console.error('Service Worker creation failed', err));
 
