@@ -14,8 +14,16 @@
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js')
-                    .then(reg => console.log('Service Worker registered', reg))
+                navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' })
+                    .then(reg => {
+                        console.log('Service Worker registered', reg);
+                        // 登録時に更新チェックを行う
+                        reg.update();
+                        // 1時間ごとに更新チェックを行う（念のため）
+                        setInterval(() => {
+                            reg.update();
+                        }, 3600000);
+                    })
                     .catch(err => console.error('Service Worker creation failed', err));
 
                 // サービスワーカー更新時にリロードする
