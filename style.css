@@ -2019,6 +2019,33 @@ header h1:active {
     -webkit-text-fill-color: transparent;
 }
 
+.evaluation-deviation {
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-top: -5px;
+    height: 20px;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    font-family: 'Outfit', sans-serif;
+    letter-spacing: 1px;
+}
+
+.evaluation-deviation.show {
+    opacity: 1;
+}
+
+.evaluation-deviation.early {
+    color: #ff7675;
+}
+
+.evaluation-deviation.late {
+    color: #74b9ff;
+}
+
+.evaluation-deviation.perfect {
+    color: #55efc4;
+}
+
 @keyframes popIn {
     0% {
         transform: scale(0.5);

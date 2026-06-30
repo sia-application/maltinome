@@ -1111,9 +1111,14 @@ class Metronome {
         if (resetBtn) {
             resetBtn.addEventListener('click', () => {
                 const textEl = el.querySelector('.evaluation-text');
+                const devEl = el.querySelector('.evaluation-deviation');
                 if (textEl) {
                     textEl.textContent = '---';
                     textEl.className = 'evaluation-text';
+                }
+                if (devEl) {
+                    devEl.textContent = '';
+                    devEl.className = 'evaluation-deviation';
                 }
 
                 // Reset counts
@@ -1273,11 +1278,13 @@ class Metronome {
         // Find closest
         let closest = null;
         let minDiff = Infinity;
+        let rawDiff = 0;
 
         relevantHits.forEach(hit => {
             const diff = Math.abs(hit.time - now);
             if (diff < minDiff) {
                 minDiff = diff;
+                rawDiff = now - hit.time;
                 closest = hit;
             }
         });
@@ -1292,17 +1299,18 @@ class Metronome {
 
             if (!isTarget) {
                 // Tapped an Anti-Target -> MISS
-                this.displayEvaluation(Infinity);
+                this.displayEvaluation(Infinity, null);
                 return;
             }
 
             // Valid target
-            this.displayEvaluation(minDiff);
+            this.displayEvaluation(minDiff, rawDiff);
         }
     }
 
-    displayEvaluation(diff) {
+    displayEvaluation(diff, rawDiff = null) {
         const textEl = this.element.querySelector('.evaluation-text');
+        const devEl = this.element.querySelector('.evaluation-deviation');
         if (!textEl) return;
 
         let result = '';
@@ -1380,6 +1388,18 @@ class Metronome {
         void textEl.offsetWidth; // Trigger reflow
         textEl.textContent = result;
         textEl.className = className;
+
+        if (devEl) {
+            if (rawDiff !== null && result !== 'MISS...') {
+                const ms = Math.round(rawDiff * 1000);
+                const sign = ms > 0 ? '+' : (ms < 0 ? '' : '±');
+                devEl.textContent = `${sign}${ms}ms`;
+                devEl.className = `evaluation-deviation show ${ms > 0 ? 'late' : (ms < 0 ? 'early' : 'perfect')}`;
+            } else {
+                devEl.textContent = '';
+                devEl.className = 'evaluation-deviation';
+            }
+        }
     }
 
     updateCountDisplay() {
@@ -1442,9 +1462,14 @@ class Metronome {
 
                     // Otherwise, it was a legitimate MISS
                     const textEl = this.element.querySelector('.evaluation-text');
+                    const devEl = this.element.querySelector('.evaluation-deviation');
                     if (textEl) {
                         textEl.textContent = '---';
                         textEl.className = 'evaluation-text';
+                    }
+                    if (devEl) {
+                        devEl.textContent = '';
+                        devEl.className = 'evaluation-deviation';
                     }
 
                     // Reset Combo on miss
